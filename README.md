@@ -32,7 +32,9 @@ Built for my own Rails apps and shared as-is under MIT. It assumes a fairly conv
 
 ## How data gets in
 
-Only through the Sweep. `Foothold::Sweep.call(:nightly)` refreshes the content inventory, counts yesterday's visits per landing page, pulls Search Console queries up to two days ago, checks the SERP for every tracked Term and, monthly, prices Terms. `Foothold::SweepJob` wraps it for a scheduler and the "Sweep now" button runs it on demand.
+Only through the Sweep. `Foothold::Sweep.call(:nightly)` refreshes the content inventory, counts yesterday's visits per landing page, pulls Search Console queries up to two days ago, checks the SERP for every tracked Term and, monthly, prices Terms. `Foothold::Sweep.call(:weekly)` refreshes each Rival's ranking Terms. `Foothold::SweepJob` wraps both for a scheduler and the "Sweep now" button runs the nightly one on demand.
+
+After every Sweep the lead builders run. Each reports the Leads the data supports right now; a Lead is raised once, refreshed while open, and closed by the Sweep when its condition clears. See [docs/adr/0002-leads-are-derived-and-keyed-by-identity.md](docs/adr/0002-leads-are-derived-and-keyed-by-identity.md).
 
 Every source records a `SweepRun` with a watermark, the last date it fully collected, and what the run cost. A source whose credential is missing records "skipped" and moves nothing. The reasoning is in [docs/adr/0001-collect-on-a-schedule-with-watermarks.md](docs/adr/0001-collect-on-a-schedule-with-watermarks.md).
 
@@ -98,13 +100,18 @@ Foothold.configure do |config|
   # Cost and discovery controls.
   config.thresholds[:max_tracked_terms] = 50
   config.thresholds[:discover_min_impressions] = 5
+
+  # Lead kind => a how-to in the host, and how to link to it from the queue.
+  config.playbooks = { "term_gap" => "competitor-comparison-posts" }
+  config.playbook_url = ->(slug) { main_app.growth_playbook_path(slug) }
 end
 ```
 
 ## Layout
 
-- `app/models/foothold`: Site, Term, Page, PageDay, Reading, SweepRun, and the TermSummary shown in the list
+- `app/models/foothold`: Site, Term, Page, PageDay, Reading, Rival, RivalTerm, Lead, SweepRun, and the TermSummary shown in the list
 - `app/services/foothold/sweep`: one class per source
+- `app/services/foothold/leads`: one builder per lead kind
 - `lib/foothold`: configuration, the Search Console and DataForSEO clients, URL normalisation
 - `app/controllers/foothold`, `app/views/foothold`: the screens
 - `db/migrate`: the migrations that create the `foothold_*` tables

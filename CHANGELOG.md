@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0
+
+- Rivals and their ranking Terms, refreshed by the weekly Sweep
+- Leads: a queue of suggested actions derived after every Sweep, keyed by kind and identity, with done, dismiss and track actions
+- Builders for term gap, page two, leaky page, title mismatch and track this
+- Host-configured Growth playbook per lead kind
+
 ## 0.1.0
 
 First release.

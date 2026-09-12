@@ -5,7 +5,7 @@ module Foothold
   class Sweep
     KINDS = {
       nightly: [ Sweep::Inventory, Sweep::Visits, Sweep::SearchConsole, Sweep::Serp, Sweep::Volumes ],
-      weekly: [],
+      weekly: [ Sweep::RivalTerms ],
       monthly: []
     }.freeze
 
@@ -21,6 +21,7 @@ module Foothold
     def call
       site = Site.current
       @sources.each { |source| run(source, site) }
+      run(Leads::Build, site)
       run(Sweep::PruneRuns, site)
       self
     end

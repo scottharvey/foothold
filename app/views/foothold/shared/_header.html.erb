@@ -2,6 +2,11 @@
   <div class="flex items-center gap-2">
     <%= link_to "Foothold", root_path, class: "text-xl font-bold" %>
     <span class="text-sm opacity-60"><%= @site&.display_name %></span>
+    <nav class="flex items-center gap-1 ml-4">
+      <%= link_to "Queue", root_path(anchor: "queue"), class: "btn btn-ghost btn-sm" %>
+      <%= link_to "Terms", root_path(anchor: "terms"), class: "btn btn-ghost btn-sm" %>
+      <%= link_to "Rivals", root_path(anchor: "rivals"), class: "btn btn-ghost btn-sm" %>
+    </nav>
   </div>
   <div class="flex items-center gap-2">
     <%= button_to "Sweep now", sweep_path, method: :post, class: "btn btn-sm btn-ghost", form: { class: "inline" } %>

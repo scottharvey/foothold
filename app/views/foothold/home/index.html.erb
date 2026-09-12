@@ -1,15 +1,21 @@
 <% content_for :title, "Foothold" %>
 <%= render "foothold/shared/header" %>
 
-<%= render Ui::IndexHeaderComponent.new(title: "Terms", subtitle: "#{@summaries.size} #{'term'.pluralize(@summaries.size)}, #{@tracked_count} tracked") do |header| %>
-  <% header.with_meta do %>
-    <% if @last_sweep %>
-      <span class="text-xs opacity-60">Last nightly sweep <%= foothold_ago(@last_sweep.started_at) %><%= ", #{@last_sweep.status}" unless @last_sweep.status == "ok" %></span>
-    <% else %>
-      <span class="text-xs opacity-60">No sweep has run yet.</span>
+<%= render "foothold/home/leads", leads: @leads, kinds: @kinds %>
+
+<section id="terms" class="mb-10">
+  <%= render Ui::IndexHeaderComponent.new(title: "Terms", subtitle: "#{@summaries.size} #{'term'.pluralize(@summaries.size)}, #{@tracked_count} tracked") do |header| %>
+    <% header.with_meta do %>
+      <% if @last_sweep %>
+        <span class="text-xs opacity-60">Last nightly sweep <%= foothold_ago(@last_sweep.started_at) %><%= ", #{@last_sweep.status}" unless @last_sweep.status == "ok" %></span>
+      <% else %>
+        <span class="text-xs opacity-60">No sweep has run yet.</span>
+      <% end %>
     <% end %>
   <% end %>
-<% end %>
 
-<%= render "foothold/home/add_term" %>
-<%= render "foothold/home/terms", summaries: @summaries %>
+  <%= render "foothold/home/add_term" %>
+  <%= render "foothold/home/terms", summaries: @summaries %>
+</section>
+
+<%= render "foothold/home/rivals", rivals: @rivals, counts: @rival_counts %>

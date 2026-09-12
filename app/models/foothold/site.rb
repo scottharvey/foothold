@@ -3,6 +3,8 @@ module Foothold
   class Site < ApplicationRecord
     has_many :terms, dependent: :destroy
     has_many :pages, dependent: :destroy
+    has_many :rivals, dependent: :destroy
+    has_many :leads, dependent: :destroy
 
     validates :domain, presence: true, uniqueness: true
 

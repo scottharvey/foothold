@@ -1,5 +1,22 @@
 module Foothold
   module ApplicationHelper
+    LEAD_VARIANTS = {
+      "drop" => :error, "leaky_page" => :warning, "not_indexed" => :error, "term_gap" => :info, "page_two" => :success,
+      "title_mismatch" => :warning, "track_this" => :neutral, "new_referrer" => :primary, "mention" => :primary, "audit" => :warning
+    }.freeze
+
+    def lead_variant(lead)
+      LEAD_VARIANTS.fetch(lead.kind, :neutral)
+    end
+
+    # The host's how-to for this lead, resolved in the view so main_app routes work.
+    def playbook_url(lead)
+      builder = Foothold.configuration.playbook_url
+      return nil if lead.playbook_slug.blank? || builder.nil?
+
+      instance_exec(lead.playbook_slug, &builder)
+    end
+
     # Keeps LastPass and 1Password from decorating fields that are not logins.
     def plain_field
       { "data-lpignore" => "true", "data-1p-ignore" => "", autocomplete: "off" }
