@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.3
+
+- Sweeps moved into the main nav alongside Queue, Terms, Rivals and Mentions
+
 ## 0.5.2
 
 - Sweep now, Weekly audit and Send digest now moved out of the main nav into
