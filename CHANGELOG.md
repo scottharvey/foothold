@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.9
+
+- Fix: `Mentions::HackerNews` sent `feed[:query]` unquoted to Algolia's
+  search, which OR-matches the individual words rather than the phrase — a
+  two-word product name (or common single words) surfaced entirely
+  unrelated stories/comments as "mentions". The query is now quoted, so
+  only the exact phrase matches.
+
+Note: v0.5.8 was tagged empty (a botched `git add` staged nothing) and
+was left in place rather than force-deleted. Skip straight to v0.5.9.
+
 ## 0.5.7
 
 - Fix: `SearchConsole#search_analytics` called `query_search_analytics`,

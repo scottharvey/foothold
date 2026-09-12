@@ -8,7 +8,11 @@ module Foothold
       def fetch(feed, since:)
         return [] if feed[:query].blank?
 
-        params = { query: feed[:query], tags: "(story,comment)" }
+        # Quoted: Algolia's default is an OR match across the individual
+        # words, which turns a multi-word product name into noise (any
+        # story mentioning either word, unrelated to each other). Quoting
+        # requires the exact phrase.
+        params = { query: %("#{feed[:query]}"), tags: "(story,comment)" }
         params[:numericFilters] = "created_at_i>#{since.to_i}" if since
         uri = URI(ENDPOINT)
         uri.query = URI.encode_www_form(params)
