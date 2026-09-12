@@ -25,7 +25,7 @@ module Foothold
 
       def collect(client, date)
         rows = client.search_analytics(site.property, date)
-        rows.group_by(&:query).count do |query, group|
+        rows.group_by { |row| row.query.to_s.squish.downcase }.count do |query, group|
           impressions = group.sum(&:impressions)
           next false if impressions < threshold(:discover_min_impressions)
 
