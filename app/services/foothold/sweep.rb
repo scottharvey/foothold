@@ -4,7 +4,7 @@ module Foothold
   # the rest, and each records a SweepRun with its watermark and cost.
   class Sweep
     KINDS = {
-      nightly: [ Sweep::Inventory, Sweep::Visits, Sweep::SearchConsole, Sweep::Serp, Sweep::Volumes ],
+      nightly: [ Sweep::Inventory, Sweep::Visits, Sweep::SearchConsole, Sweep::Serp, Sweep::Volumes, Sweep::MentionFeeds ],
       weekly: [ Sweep::RivalTerms, Sweep::Audit, Sweep::IndexCoverage ],
       monthly: []
     }.freeze

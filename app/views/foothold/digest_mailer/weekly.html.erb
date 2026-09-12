@@ -38,6 +38,17 @@
       </tr>
     <% end %>
 
+    <% if @digest.new_mentions.any? %>
+      <tr>
+        <td style="padding-bottom:20px;font-size:15px;line-height:1.6;">
+          <strong>New mentions</strong>
+          <% @digest.new_mentions.each do |mention| %>
+            <p style="margin:8px 0 0;"><%= mention["title"].presence || mention["url"] %> (<%= mention["source"].humanize %>)</p>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+
     <% if @digest.findings.any? %>
       <tr>
         <td style="padding-bottom:20px;font-size:15px;line-height:1.6;">

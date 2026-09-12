@@ -17,6 +17,13 @@ New referrers
 <% end -%>
 
 <% end -%>
+<% if @digest.new_mentions.any? -%>
+New mentions
+<% @digest.new_mentions.each do |mention| -%>
+  <%= mention["title"].presence || mention["url"] %> (<%= mention["source"].humanize %>)
+<% end -%>
+
+<% end -%>
 <% if @digest.findings.any? -%>
 Findings
 <% @digest.findings.each do |finding| -%>

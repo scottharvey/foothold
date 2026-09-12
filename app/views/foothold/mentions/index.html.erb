@@ -1,0 +1,23 @@
+<% content_for :title, "Mentions" %>
+<%= render "foothold/shared/header" %>
+
+<%= render Ui::IndexHeaderComponent.new(title: "Mentions", subtitle: "#{@mentions.size} #{'mention'.pluralize(@mentions.size)}") %>
+
+<% if @mentions.empty? %>
+  <%= render Ui::EmptyStateComponent.new(title: "No mentions yet", description: "The nightly sweep polls Google Alerts, Hacker News, App Store reviews and Bluesky, once feeds are configured.") %>
+<% else %>
+  <ul class="list rounded-box bg-base-100 shadow-sm">
+    <% @mentions.each do |mention| %>
+      <li class="list-row">
+        <div>
+          <div class="font-medium">
+            <%= link_to mention.title.presence || mention.url, mention.url, target: "_blank", rel: "noopener", class: "link link-hover" %>
+            <%= render Ui::BadgeComponent.new(size: :sm, soft: true, variant: :neutral, text: mention.source.humanize) %>
+            <%= render Ui::BadgeComponent.new(size: :sm, soft: true, variant: :success, text: "linked") if mention.linked? %>
+          </div>
+          <div class="text-xs opacity-60"><%= mention.author %><%= " · " if mention.author.present? %><%= foothold_ago(mention.found_at) %></div>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

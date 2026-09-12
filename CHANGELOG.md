@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0
+
+- Mentions: Google Alerts, Hacker News, App Store reviews and Bluesky, each polled from its own watermark
+- A mention lead, unresolved mentions listed at /foothold/mentions
+- New mentions and findings sections in the Monday digest
+
 ## 0.4.0
 
 - The weekly Sweep now audits every page still in the sitemap: HTTP status, title and description length, H1 count, a self-pointing canonical, image alt text, broken and redirected internal links, thin content, and orphan pages

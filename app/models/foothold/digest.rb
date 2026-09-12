@@ -32,16 +32,18 @@ module Foothold
       week = week_starting..(week_starting + 6)
       movers = term_movers(site, week_starting)
       referrers = site.referrers.where(first_seen_on: week).not_search_engines
+      mentions = site.mentions.where(found_at: week_starting..(week_starting + 7))
+      findings = Finding.open.joins(:page).where(foothold_pages: { site_id: site.id }).where(first_seen_at: week_starting..(week_starting + 7))
       leads = site.leads.open.by_priority
 
       {
         "movers_up" => movers.select { |mover| mover["delta"] && mover["delta"] < 0 }.first(MOVERS),
         "movers_down" => movers.select { |mover| mover["delta"] && mover["delta"] > 0 }.sort_by { |mover| -mover["delta"] }.first(MOVERS),
         "new_referrers" => referrers.map { |referrer| { "domain" => referrer.domain, "visits" => referrer.visits, "signups" => referrer.signups } },
-        "new_mentions" => [],
-        "findings" => [],
+        "new_mentions" => mentions.map { |mention| { "url" => mention.url, "title" => mention.title, "source" => mention.source } },
+        "findings" => findings.includes(:page).map { |finding| { "summary" => "#{finding.page.url}: #{finding.description}" } },
         "top_leads" => leads.first(3).map { |lead| { "kind" => lead.kind, "summary" => lead.summary } },
-        "counts" => { "open_leads" => leads.count, "new_referrers" => referrers.count }
+        "counts" => { "open_leads" => leads.count, "new_referrers" => referrers.count, "new_mentions" => mentions.count }
       }
     end
     private_class_method :new_payload

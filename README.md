@@ -20,7 +20,7 @@ Built for my own Rails apps and shared as-is under MIT. It assumes a fairly conv
 
 **Referrer**: a domain that sent a visitor.
 
-**Mention**: a place on the web where the product was named.
+**Mention**: a place on the web where the product was named. Polled from Google Alerts, Hacker News, App Store reviews and Bluesky.
 
 **Finding**: a problem the audit observed on a Page.
 
@@ -47,6 +47,7 @@ Every source records a `SweepRun` with a watermark, the last date it fully colle
 | Search Console | `FOOTHOLD_GOOGLE_SERVICE_ACCOUNT_JSON` | queries, impressions, positions, index coverage |
 | SERP and keyword data | `FOOTHOLD_DATAFORSEO_LOGIN` / `_PASSWORD` | tracked Term positions, volume, difficulty, rival ranking Terms |
 | Fetching the Site's own pages | `config.fetcher`, a plain `Net::HTTP` client by default | the weekly audit |
+| Mentions | `config.mention_feeds`, empty by default | Google Alerts, Hacker News, App Store reviews, Bluesky |
 
 Screens render in a host layout (`hub` by default), inherit from the host's `ApplicationController` and use the host's `Ui::*` ViewComponents with Tailwind and DaisyUI class names.
 
@@ -105,6 +106,14 @@ Foothold.configure do |config|
   # Lead kind => a how-to in the host, and how to link to it from the queue.
   config.playbooks = { "term_gap" => "competitor-comparison-posts" }
   config.playbook_url = ->(slug) { main_app.growth_playbook_path(slug) }
+
+  # Mention feeds. Each needs no auth. Leave out a feed to skip its source.
+  config.mention_feeds = [
+    { source: "google_alerts", url: ENV["FOOTHOLD_GOOGLE_ALERTS_RSS"] },
+    { source: "hacker_news", query: config.site_name },
+    { source: "app_store", app_id: ENV["FOOTHOLD_APP_STORE_ID"], country: "us" },
+    { source: "bluesky", query: config.site_name }
+  ].select { |feed| feed.values_at(:url, :query, :app_id).any?(&:present?) }
 end
 ```
 
