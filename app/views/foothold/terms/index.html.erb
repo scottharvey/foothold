@@ -1,0 +1,7 @@
+<% content_for :title, "Terms" %>
+<%= render "foothold/shared/header" %>
+
+<%= render Ui::IndexHeaderComponent.new(title: "Terms", subtitle: "#{@summaries.size} #{'term'.pluralize(@summaries.size)}, #{@tracked_count} tracked") %>
+
+<%= render "foothold/terms/add_term" %>
+<%= render "foothold/terms/list", summaries: @summaries %>

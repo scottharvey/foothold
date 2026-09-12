@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.2
+
+- Sweep now, Weekly audit and Send digest now moved out of the main nav into
+  a Sweeps page, which also lists sweep history, watermarks and cost — data
+  that existed already but had no screen of its own
+
+## 0.5.1
+
+- Queue, Terms, Rivals and Mentions are four separate pages instead of one
+  long page with anchor links, matching how Mentions already worked
+
 ## 0.5.0
 
 - Mentions: Google Alerts, Hacker News, App Store reviews and Bluesky, each polled from its own watermark

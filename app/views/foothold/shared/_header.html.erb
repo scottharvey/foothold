@@ -3,16 +3,14 @@
     <%= link_to "Foothold", root_path, class: "text-xl font-bold" %>
     <span class="text-sm opacity-60"><%= @site&.display_name %></span>
     <nav class="flex items-center gap-1 ml-4">
-      <%= link_to "Queue", root_path(anchor: "queue"), class: "btn btn-ghost btn-sm" %>
-      <%= link_to "Terms", root_path(anchor: "terms"), class: "btn btn-ghost btn-sm" %>
-      <%= link_to "Rivals", root_path(anchor: "rivals"), class: "btn btn-ghost btn-sm" %>
-      <%= link_to "Mentions", mentions_path, class: "btn btn-ghost btn-sm" %>
+      <%= link_to "Queue", root_path, class: "btn btn-ghost btn-sm #{'btn-active' if controller_name == 'home'}" %>
+      <%= link_to "Terms", terms_path, class: "btn btn-ghost btn-sm #{'btn-active' if controller_name == 'terms'}" %>
+      <%= link_to "Rivals", rivals_path, class: "btn btn-ghost btn-sm #{'btn-active' if controller_name == 'rivals'}" %>
+      <%= link_to "Mentions", mentions_path, class: "btn btn-ghost btn-sm #{'btn-active' if controller_name == 'mentions'}" %>
     </nav>
   </div>
   <div class="flex items-center gap-2">
-    <%= button_to "Sweep now", sweep_path, method: :post, class: "btn btn-sm btn-ghost", form: { class: "inline" } %>
-    <%= button_to "Weekly audit", sweep_path(kind: "weekly"), method: :post, class: "btn btn-sm btn-ghost", form: { class: "inline" } %>
-    <%= button_to "Send digest now", digest_path, method: :post, class: "btn btn-sm btn-ghost", form: { class: "inline" } %>
+    <%= link_to "Sweeps", sweeps_path, class: "btn btn-sm btn-ghost #{'btn-active' if controller_name == 'sweeps'}" %>
     <%= link_to "Hub", main_app.hub_path, class: "btn btn-sm btn-ghost opacity-60" if main_app.respond_to?(:hub_path) %>
   </div>
 </div>

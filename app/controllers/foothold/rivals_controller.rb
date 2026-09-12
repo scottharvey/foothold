@@ -1,18 +1,23 @@
 module Foothold
   class RivalsController < ApplicationController
+    def index
+      @rivals = @site.rivals.alphabetical
+      @rival_counts = RivalTerm.where(rival_id: @rivals.select(:id)).group(:rival_id).count
+    end
+
     def create
       rival = @site.rivals.create(domain: params.dig(:rival, :domain))
       if rival.persisted?
-        redirect_to root_path(anchor: "rivals"), notice: "Added #{rival.domain}. Its terms arrive with the weekly sweep."
+        redirect_to rivals_path, notice: "Added #{rival.domain}. Its terms arrive with the weekly sweep."
       else
-        redirect_to root_path(anchor: "rivals"), alert: rival.errors.full_messages.to_sentence
+        redirect_to rivals_path, alert: rival.errors.full_messages.to_sentence
       end
     end
 
     def destroy
       rival = @site.rivals.find(params[:id])
       rival.destroy!
-      redirect_to root_path(anchor: "rivals"), notice: "Removed #{rival.domain}."
+      redirect_to rivals_path, notice: "Removed #{rival.domain}."
     end
   end
 end

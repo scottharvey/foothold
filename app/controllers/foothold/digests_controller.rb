@@ -6,7 +6,7 @@ module Foothold
       digest = Digest.build!(site: @site)
       DigestMailer.weekly(digest).deliver_later
       digest.update!(sent_at: Time.current)
-      redirect_to root_path, notice: "Digest sent to #{digest.recipient}."
+      redirect_to sweeps_path, notice: "Digest sent to #{digest.recipient}."
     end
   end
 end

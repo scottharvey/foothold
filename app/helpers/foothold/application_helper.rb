@@ -15,6 +15,20 @@ module Foothold
       page && page_path(page)
     end
 
+    SWEEP_STATUS_VARIANTS = { "ok" => :success, "failed" => :error, "running" => :warning }.freeze
+
+    def sweep_status_variant(run)
+      SWEEP_STATUS_VARIANTS.fetch(run.status, :neutral)
+    end
+
+    # A short "key: value" line from a run's detail. An error, when present,
+    # takes priority over whatever else the run noted before it failed.
+    def sweep_detail(run)
+      return run.detail["error"] if run.detail["error"].present?
+
+      run.detail.map { |key, value| "#{key}: #{value}" }.join(", ").presence || "–"
+    end
+
     def playbook_url(lead)
       builder = Foothold.configuration.playbook_url
       return nil if lead.playbook_slug.blank? || builder.nil?

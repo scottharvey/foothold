@@ -6,7 +6,7 @@
     <%= button_to @term.tracked? ? "Stop tracking" : "Track", term_path(@term), method: :patch, params: { term: { tracked: !@term.tracked? } }, class: "btn btn-sm #{@term.tracked? ? 'btn-ghost' : 'btn-primary'}", form: { class: "inline" } %>
   <% end %>
   <% header.with_utility_action do %>
-    <%= link_to "All terms", root_path, class: "btn btn-sm btn-ghost" %>
+    <%= link_to "All terms", terms_path, class: "btn btn-sm btn-ghost" %>
   <% end %>
 <% end %>
 

@@ -1,8 +1,8 @@
 Foothold::Engine.routes.draw do
   root to: "home#index"
-  resources :terms, only: %i[show create update destroy]
-  resource :sweep, only: :create
-  resources :rivals, only: %i[create destroy]
+  resources :terms, only: %i[index show create update destroy]
+  resources :sweeps, only: %i[index create]
+  resources :rivals, only: %i[index create destroy]
   resource :digest, only: :create
   resources :pages, only: :show
   resources :mentions, only: :index

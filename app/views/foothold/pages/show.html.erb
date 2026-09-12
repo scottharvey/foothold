@@ -3,7 +3,7 @@
 
 <%= render Ui::IndexHeaderComponent.new(title: @page.url, subtitle: "#{@page.kind.humanize}#{" · #{@page.http_status}" if @page.http_status}#{" · #{@page.word_count} words" if @page.word_count}") do |header| %>
   <% header.with_utility_action do %>
-    <%= link_to "All terms", root_path, class: "btn btn-sm btn-ghost" %>
+    <%= link_to "Back to queue", root_path, class: "btn btn-sm btn-ghost" %>
   <% end %>
 <% end %>
 

@@ -76,7 +76,7 @@ foothold_nightly:
   schedule: every day at 3am
 ```
 
-Then set the environment keys, visit `/foothold` as an admin and press "Sweep now".
+Then set the environment keys and visit `/foothold` as an admin. The nav bar has four pages: Queue (the root, what to do next), Terms, Rivals and Mentions. Press "Sweep now".
 
 Search Console: create a service account in Google Cloud, enable the Search Console API, download its JSON key, and add the service account's email address as a user on the property in Search Console. Put the JSON (raw or Base64) in `FOOTHOLD_GOOGLE_SERVICE_ACCOUNT_JSON`.
 

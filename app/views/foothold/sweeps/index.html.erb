@@ -1,0 +1,44 @@
+<% content_for :title, "Sweeps" %>
+<%= render "foothold/shared/header" %>
+
+<%= render Ui::IndexHeaderComponent.new(title: "Sweeps", subtitle: "Collection runs, watermarks and what each one cost") do |header| %>
+  <% header.with_primary_action do %>
+    <%= button_to "Sweep now", sweeps_path, method: :post, class: "btn btn-sm btn-primary", form: { class: "inline" } %>
+  <% end %>
+  <% header.with_utility_action do %>
+    <%= button_to "Weekly audit", sweeps_path(kind: "weekly"), method: :post, class: "btn btn-sm btn-ghost", form: { class: "inline" } %>
+  <% end %>
+<% end %>
+
+<% if @runs.empty? %>
+  <%= render Ui::EmptyStateComponent.new(title: "No sweeps yet", description: "Press Sweep now above, or wait for the nightly schedule.") %>
+<% else %>
+  <%= render Ui::CardComponent.new(body: false) do %>
+    <%= render Ui::TableComponent.new(size: :sm) do %>
+      <thead>
+        <tr><th>Source</th><th>Kind</th><th>Status</th><th>Watermark</th><th>Started</th><th>Took</th><th>Detail</th></tr>
+      </thead>
+      <tbody>
+        <% @runs.each do |run| %>
+          <tr>
+            <td class="font-medium"><%= run.name.humanize %></td>
+            <td><%= run.kind.humanize %></td>
+            <td><%= render Ui::BadgeComponent.new(variant: sweep_status_variant(run), soft: true, size: :sm, text: run.status) %></td>
+            <td class="whitespace-nowrap"><%= run.watermark || "–" %></td>
+            <td class="whitespace-nowrap"><%= foothold_ago(run.started_at) %></td>
+            <td class="whitespace-nowrap"><%= run.elapsed ? "#{run.elapsed.round(1)}s" : "–" %></td>
+            <td class="text-xs font-mono opacity-70"><%= sweep_detail(run) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    <% end %>
+  <% end %>
+<% end %>
+
+<section class="mt-10">
+  <%= render Ui::IndexHeaderComponent.new(title: "Digest", subtitle: @last_digest ? "Last sent #{foothold_ago(@last_digest.sent_at)} for the week of #{@last_digest.week_starting.strftime('%-d %b %Y')}" : "Never sent") do |header| %>
+    <% header.with_primary_action do %>
+      <%= button_to "Send digest now", digest_path, method: :post, class: "btn btn-sm", form: { class: "inline" } %>
+    <% end %>
+  <% end %>
+</section>
