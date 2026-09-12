@@ -32,7 +32,7 @@ module Foothold
         start_date: date.iso8601, end_date: date.iso8601,
         dimensions: %w[query page], row_limit: ROW_LIMIT, data_state: "final"
       )
-      Array(@service.query_search_analytics(property, request).rows).map do |row|
+      Array(@service.query_searchanalytic(property, request).rows).map do |row|
         Row.new(query: row.keys[0], page: row.keys[1], clicks: row.clicks.to_i, impressions: row.impressions.to_i, position: row.position.to_f)
       end
     end

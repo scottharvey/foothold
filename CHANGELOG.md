@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.7
+
+- Fix: `SearchConsole#search_analytics` called `query_search_analytics`,
+  which doesn't exist on `google-apis-searchconsole_v1` (the real method is
+  `query_searchanalytic`, singular). Every Search Console sweep raised
+  `NoMethodError` and was never caught, since the host's test suite runs
+  against a fake client. Confirmed against google-apis-searchconsole_v1 0.23.0.
+
 ## 0.5.6
 
 - Drops its own "Hub" link from the header, now that the host places one
