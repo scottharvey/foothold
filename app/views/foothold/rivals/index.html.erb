@@ -20,7 +20,7 @@
         <div class="font-medium"><%= rival.domain %></div>
         <div class="text-xs opacity-60">
           <%= @rival_counts.fetch(rival.id, 0) %> ranking <%= "term".pluralize(@rival_counts.fetch(rival.id, 0)) %>
-          <%= " · checked #{foothold_ago(rival.last_checked_at)}" if rival.last_checked_at %>
+          <% if rival.last_checked_at %> · checked <%= foothold_ago(rival.last_checked_at) %><% end %>
         </div>
         <div>
           <%= button_to "Remove", rival_path(rival), method: :delete, class: "btn btn-ghost btn-xs text-error",

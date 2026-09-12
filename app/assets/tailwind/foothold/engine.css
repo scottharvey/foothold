@@ -1,0 +1,5 @@
+/* Lets Tailwind scan this engine's own views wherever Bundler installed it
+   (a tag, a branch, or a local path override), instead of a path hardcoded
+   to one machine. Picked up automatically by `bin/rails tailwindcss:build` /
+   `:watch` in the host app via the tailwindcss-rails gem's engines task. */
+@source "../../../";

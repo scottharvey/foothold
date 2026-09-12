@@ -39,10 +39,6 @@ module Foothold
       episode.any? { |run| run.status == "failed" } ? :error : :success
     end
 
-    def sweep_episode_label(episode)
-      "#{episode.first.kind.humanize} sweep · #{foothold_ago(episode.first.started_at)}"
-    end
-
     def playbook_url(lead)
       builder = Foothold.configuration.playbook_url
       return nil if lead.playbook_slug.blank? || builder.nil?

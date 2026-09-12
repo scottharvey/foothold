@@ -22,7 +22,7 @@
         <% @episodes.each do |episode| %>
           <tr class="bg-base-200/50">
             <td colspan="5" class="py-2">
-              <span class="text-xs font-semibold uppercase tracking-wide text-base-content/60"><%= sweep_episode_label(episode) %></span>
+              <span class="text-xs font-semibold uppercase tracking-wide text-base-content/60"><%= episode.first.kind.humanize %> sweep · <%= foothold_ago(episode.first.started_at) %></span>
               <%= render Ui::BadgeComponent.new(variant: sweep_episode_variant(episode), soft: true, size: :sm, text: sweep_episode_variant(episode) == :error ? "1 or more failed" : "ok") %>
             </td>
           </tr>
@@ -43,7 +43,7 @@
 
 <section class="mt-10">
   <%= render Ui::CardComponent.new do %>
-    <%= render Ui::IndexHeaderComponent.new(title: "Digest", subtitle: @last_digest ? "Last sent #{foothold_ago(@last_digest.sent_at)} for the week of #{@last_digest.week_starting.strftime('%-d %b %Y')}" : "Never sent") do |header| %>
+    <%= render Ui::IndexHeaderComponent.new(title: "Digest", subtitle: @last_digest ? "Last sent #{time_ago_in_words(@last_digest.sent_at)} ago, for the week of #{@last_digest.week_starting.strftime('%-d %b %Y')}" : "Never sent") do |header| %>
       <% header.with_primary_action do %>
         <%= button_to "Send digest now", digest_path, method: :post, class: "btn btn-sm", form: { class: "inline" } %>
       <% end %>

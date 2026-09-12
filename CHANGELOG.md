@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.5
+
+- Header now renders through the host's shared Ui::ToolHeaderComponent, so
+  Foothold's chrome matches every other operator tool on /hub (Rapport,
+  Growth, Email templates) instead of its own bespoke markup. The product
+  name next to "Foothold" is now the host app's own name (e.g. "Launchpad"),
+  not the tracked site's domain, matching how every other tool shows it.
+
 ## 0.5.4
 
 - Sweep history groups consecutive same-kind runs into one episode, since a
