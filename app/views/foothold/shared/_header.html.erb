@@ -10,6 +10,8 @@
   </div>
   <div class="flex items-center gap-2">
     <%= button_to "Sweep now", sweep_path, method: :post, class: "btn btn-sm btn-ghost", form: { class: "inline" } %>
+    <%= button_to "Weekly audit", sweep_path(kind: "weekly"), method: :post, class: "btn btn-sm btn-ghost", form: { class: "inline" } %>
+    <%= button_to "Send digest now", digest_path, method: :post, class: "btn btn-sm btn-ghost", form: { class: "inline" } %>
     <%= link_to "Hub", main_app.hub_path, class: "btn btn-sm btn-ghost opacity-60" if main_app.respond_to?(:hub_path) %>
   </div>
 </div>

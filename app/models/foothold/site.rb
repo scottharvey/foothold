@@ -5,6 +5,8 @@ module Foothold
     has_many :pages, dependent: :destroy
     has_many :rivals, dependent: :destroy
     has_many :leads, dependent: :destroy
+    has_many :referrers, dependent: :destroy
+    has_many :digests, dependent: :destroy
 
     validates :domain, presence: true, uniqueness: true
 

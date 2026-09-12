@@ -1,0 +1,34 @@
+Foothold — week of <%= @digest.week_starting.strftime("%-d %b %Y") %>
+
+<% if @digest.movers_up.any? || @digest.movers_down.any? -%>
+Movers
+<% @digest.movers_up.each do |mover| -%>
+  up: "<%= mover["phrase"] %>" <%= mover["before"] %> -> <%= mover["after"] %>
+<% end -%>
+<% @digest.movers_down.each do |mover| -%>
+  down: "<%= mover["phrase"] %>" <%= mover["before"] %> -> <%= mover["after"] %>
+<% end -%>
+
+<% end -%>
+<% if @digest.new_referrers.any? -%>
+New referrers
+<% @digest.new_referrers.each do |referrer| -%>
+  <%= referrer["domain"] %> — <%= referrer["visits"] %> visits, <%= referrer["signups"] %> signups
+<% end -%>
+
+<% end -%>
+<% if @digest.findings.any? -%>
+Findings
+<% @digest.findings.each do |finding| -%>
+  <%= finding["summary"] %>
+<% end -%>
+
+<% end -%>
+Top leads
+<% if @digest.top_leads.any? -%>
+<% @digest.top_leads.each do |lead| -%>
+  <%= lead["summary"] %>
+<% end -%>
+<% else -%>
+  Nothing open right now.
+<% end -%>

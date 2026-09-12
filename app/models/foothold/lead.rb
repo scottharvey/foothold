@@ -1,5 +1,3 @@
-require "digest"
-
 module Foothold
   # A suggested action. Derived by the builders after every Sweep and keyed by
   # kind plus an identity, so the same suggestion is never raised twice.
@@ -28,7 +26,7 @@ module Foothold
     end
 
     def self.identity_digest(kind, identity)
-      Digest::SHA256.hexdigest("#{kind}:#{identity.to_h.transform_keys(&:to_s).sort.to_h.to_json}")
+      ::Digest::SHA256.hexdigest("#{kind}:#{identity.to_h.transform_keys(&:to_s).sort.to_h.to_json}")
     end
 
     # The one way a builder raises a lead. New: opened. Open: evidence refreshed.

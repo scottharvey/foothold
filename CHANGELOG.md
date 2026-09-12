@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0
+
+- Referrers, recorded per day from the same visits the nightly sweep already reads
+- New referrer and position drop leads
+- The Monday digest: movers, new referrers, findings (empty until the audit ships), and the top three leads, stored per week and mailed once
+- "Send digest now" for testing on real data
+
 ## 0.2.0
 
 - Rivals and their ranking Terms, refreshed by the weekly Sweep

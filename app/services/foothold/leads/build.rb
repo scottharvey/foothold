@@ -3,7 +3,7 @@ module Foothold
     # Runs every builder after a Sweep. Each is isolated so one failure does
     # not stop the rest.
     class Build < Sweep::Base
-      BUILDERS = [ TermGap, PageTwo, LeakyPage, TitleMismatch, TrackThis ].freeze
+      BUILDERS = [ Drop, LeakyPage, TermGap, PageTwo, TitleMismatch, TrackThis, NewReferrer ].freeze
 
       def call
         tracked("leads") do |run|
