@@ -1,0 +1,7 @@
+<%= form_with url: terms_path, method: :post, class: "flex flex-wrap items-end gap-2 mb-6" do |f| %>
+  <fieldset class="fieldset">
+    <label class="label" for="term_phrase">Add a term to track</label>
+    <%= f.text_field "term[phrase]", id: "term_phrase", placeholder: "e.g. anki alternative ios", class: "input input-sm w-72", required: true, **plain_field %>
+  </fieldset>
+  <%= f.submit "Track", class: "btn btn-primary btn-sm" %>
+<% end %>

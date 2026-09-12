@@ -1,0 +1,16 @@
+<div class="flex flex-wrap items-center justify-between gap-3 mb-8">
+  <div class="flex items-center gap-2">
+    <%= link_to "Foothold", root_path, class: "text-xl font-bold" %>
+    <span class="text-sm opacity-60"><%= @site&.display_name %></span>
+  </div>
+  <div class="flex items-center gap-2">
+    <%= button_to "Sweep now", sweep_path, method: :post, class: "btn btn-sm btn-ghost", form: { class: "inline" } %>
+    <%= link_to "Hub", main_app.hub_path, class: "btn btn-sm btn-ghost opacity-60" if main_app.respond_to?(:hub_path) %>
+  </div>
+</div>
+<% if notice.present? %>
+  <%= render Ui::AlertComponent.new(variant: :success, classes: "mb-4", text: notice) %>
+<% end %>
+<% if alert.present? %>
+  <%= render Ui::AlertComponent.new(variant: :error, classes: "mb-4", text: alert) %>
+<% end %>

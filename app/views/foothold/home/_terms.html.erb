@@ -1,0 +1,54 @@
+<% if summaries.empty? %>
+  <%= render Ui::EmptyStateComponent.new(title: "No terms yet", description: "Add one above, or run a sweep to discover the phrases Google already shows this site for.") %>
+<% else %>
+  <%= render Ui::CardComponent.new(body: false) do %>
+    <%= render Ui::TableComponent.new(size: :sm) do %>
+      <thead>
+        <tr>
+          <th>Term</th>
+          <th>Tracked</th>
+          <th class="text-right">Position</th>
+          <th>Trend</th>
+          <th class="text-right">Impressions 28d</th>
+          <th class="text-right">Clicks 28d</th>
+          <th class="text-right">Signups 28d</th>
+          <th class="text-right">Volume</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% summaries.each do |summary| %>
+          <% term = summary.term %>
+          <tr>
+            <td>
+              <%= link_to term.phrase, term_path(term), class: "link link-hover font-medium" %>
+              <div class="text-xs opacity-60"><%= term.source.humanize %><%= " · SERP #{position_text(summary.serp_position)}" if summary.serp_position %></div>
+            </td>
+            <td>
+              <%= button_to term_path(term), method: :patch, params: { term: { tracked: !term.tracked? } },
+                    class: "btn btn-xs #{term.tracked? ? 'btn-primary' : 'btn-ghost'}", form: { class: "inline" } do %>
+                <%= term.tracked? ? "Tracked" : "Track" %>
+              <% end %>
+            </td>
+            <td class="text-right tabular-nums whitespace-nowrap">
+              <%= position_text(summary.position) %>
+              <%= delta_badge(summary.delta) %>
+            </td>
+            <td><%= sparkline(summary.series) %></td>
+            <td class="text-right tabular-nums"><%= number_with_delimiter(summary.impressions) %></td>
+            <td class="text-right tabular-nums"><%= number_with_delimiter(summary.clicks) %></td>
+            <td class="text-right tabular-nums"><%= number_with_delimiter(summary.signups) %></td>
+            <td class="text-right tabular-nums">
+              <%= term.volume ? number_with_delimiter(term.volume) : "–" %>
+              <% if term.difficulty %><span class="text-xs opacity-60">kd <%= term.difficulty %></span><% end %>
+            </td>
+            <td class="text-right">
+              <%= button_to "Remove", term_path(term), method: :delete, class: "btn btn-ghost btn-xs text-error",
+                    form: { class: "inline", data: { turbo_confirm: "Remove “#{term.phrase}” and its readings?" } } %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    <% end %>
+  <% end %>
+<% end %>

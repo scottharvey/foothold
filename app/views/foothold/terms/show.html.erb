@@ -1,0 +1,42 @@
+<% content_for :title, @term.phrase %>
+<%= render "foothold/shared/header" %>
+
+<%= render Ui::IndexHeaderComponent.new(title: @term.phrase, subtitle: "#{@term.source.humanize} · #{@term.tracked? ? 'tracked' : 'not tracked'}#{" · volume #{number_with_delimiter(@term.volume)}" if @term.volume}#{" · difficulty #{@term.difficulty}" if @term.difficulty}") do |header| %>
+  <% header.with_primary_action do %>
+    <%= button_to @term.tracked? ? "Stop tracking" : "Track", term_path(@term), method: :patch, params: { term: { tracked: !@term.tracked? } }, class: "btn btn-sm #{@term.tracked? ? 'btn-ghost' : 'btn-primary'}", form: { class: "inline" } %>
+  <% end %>
+  <% header.with_utility_action do %>
+    <%= link_to "All terms", root_path, class: "btn btn-sm btn-ghost" %>
+  <% end %>
+<% end %>
+
+<div class="mb-6 flex items-center gap-4">
+  <span class="text-2xl font-bold tabular-nums"><%= position_text(@summary.position) %></span>
+  <%= delta_badge(@summary.delta) %>
+  <%= sparkline(@summary.series, width: 240, height: 40) %>
+</div>
+
+<% if @readings.empty? %>
+  <%= render Ui::EmptyStateComponent.new(title: "No readings yet", description: "Readings arrive with the nightly sweep.") %>
+<% else %>
+  <%= render Ui::CardComponent.new(body: false) do %>
+    <%= render Ui::TableComponent.new(size: :sm) do %>
+      <thead>
+        <tr><th>Date</th><th>Source</th><th class="text-right">Position</th><th>Landing page</th><th class="text-right">Impressions</th><th class="text-right">Clicks</th><th class="text-right">Signups</th></tr>
+      </thead>
+      <tbody>
+        <% @readings.each do |reading| %>
+          <tr>
+            <td class="whitespace-nowrap"><%= reading.date.strftime("%-d %b %Y") %></td>
+            <td><%= reading.source.humanize %></td>
+            <td class="text-right tabular-nums"><%= position_text(reading.position&.to_f) %></td>
+            <td class="font-mono text-xs"><%= reading.landing_url %></td>
+            <td class="text-right tabular-nums"><%= number_with_delimiter(reading.impressions) %></td>
+            <td class="text-right tabular-nums"><%= number_with_delimiter(reading.clicks) %></td>
+            <td class="text-right tabular-nums"><%= number_with_delimiter(reading.signups) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    <% end %>
+  <% end %>
+<% end %>
