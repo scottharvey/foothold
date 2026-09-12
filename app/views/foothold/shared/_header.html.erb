@@ -1,4 +1,4 @@
-<%= render Ui::ToolHeaderComponent.new(name: "Foothold", home_url: root_path, hub_url: (main_app.hub_path if main_app.respond_to?(:hub_path))) do |header| %>
+<%= render Ui::ToolHeaderComponent.new(name: "Foothold", home_url: root_path) do |header| %>
   <% header.with_nav do %>
     <%= link_to "Queue", root_path, class: "btn btn-ghost btn-sm #{'btn-active' if controller_name == 'home'}" %>
     <%= link_to "Terms", terms_path, class: "btn btn-ghost btn-sm #{'btn-active' if controller_name == 'terms'}" %>

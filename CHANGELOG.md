@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.6
+
+- Drops its own "Hub" link from the header, now that the host places one
+  link back to the Hub in the layout's top bar (next to Sign out) shared by
+  every operator tool, instead of each tool showing its own
+
 ## 0.5.5
 
 - Header now renders through the host's shared Ui::ToolHeaderComponent, so
