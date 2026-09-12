@@ -5,7 +5,7 @@ module Foothold
   class Sweep
     KINDS = {
       nightly: [ Sweep::Inventory, Sweep::Visits, Sweep::SearchConsole, Sweep::Serp, Sweep::Volumes ],
-      weekly: [ Sweep::RivalTerms ],
+      weekly: [ Sweep::RivalTerms, Sweep::Audit, Sweep::IndexCoverage ],
       monthly: []
     }.freeze
 

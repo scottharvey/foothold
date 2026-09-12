@@ -4,6 +4,7 @@ Foothold::Engine.routes.draw do
   resource :sweep, only: :create
   resources :rivals, only: %i[create destroy]
   resource :digest, only: :create
+  resources :pages, only: :show
   resources :leads, only: [] do
     member do
       post :done

@@ -10,6 +10,11 @@ module Foothold
     end
 
     # The host's how-to for this lead, resolved in the view so main_app routes work.
+    def page_url_for(lead)
+      page = lead.page
+      page && page_path(page)
+    end
+
     def playbook_url(lead)
       builder = Foothold.configuration.playbook_url
       return nil if lead.playbook_slug.blank? || builder.nil?

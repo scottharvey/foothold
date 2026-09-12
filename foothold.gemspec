@@ -21,4 +21,5 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = ">= 3.2"
   spec.add_dependency "rails", ">= 8.0"
   spec.add_dependency "google-apis-searchconsole_v1", ">= 0.15"
+  spec.add_dependency "nokogiri"
 end

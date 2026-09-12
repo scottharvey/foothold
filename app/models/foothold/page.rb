@@ -5,6 +5,7 @@ module Foothold
 
     belongs_to :site
     has_many :page_days, dependent: :destroy
+    has_many :findings, dependent: :destroy
 
     validates :url, presence: true, uniqueness: { scope: :site_id }
     validates :kind, inclusion: { in: KINDS }

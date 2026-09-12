@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+
+- The weekly Sweep now audits every page still in the sitemap: HTTP status, title and description length, H1 count, a self-pointing canonical, image alt text, broken and redirected internal links, thin content, and orphan pages
+- Search Console index coverage per page, oldest-checked first
+- Audit and not-indexed leads, and a page detail screen listing open findings
+
 ## 0.3.0
 
 - Referrers, recorded per day from the same visits the nightly sweep already reads

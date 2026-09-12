@@ -18,7 +18,13 @@
         <li class="list-row items-center" id="<%= dom_id(lead) %>">
           <div><%= render Ui::BadgeComponent.new(variant: lead_variant(lead), soft: true, size: :sm, text: lead.kind.humanize) %></div>
           <div class="min-w-0">
-            <div class="font-medium"><%= lead.summary %></div>
+            <div class="font-medium">
+              <% if (url = page_url_for(lead)) %>
+                <%= link_to lead.summary, url, class: "link link-hover" %>
+              <% else %>
+                <%= lead.summary %>
+              <% end %>
+            </div>
             <div class="text-xs opacity-60"><%= lead.evidence %><%= " · " if lead.evidence.present? %>opened <%= foothold_ago(lead.opened_at) %></div>
           </div>
           <div class="flex items-center gap-1">

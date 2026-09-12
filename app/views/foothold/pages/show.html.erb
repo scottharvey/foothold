@@ -1,0 +1,21 @@
+<% content_for :title, @page.url %>
+<%= render "foothold/shared/header" %>
+
+<%= render Ui::IndexHeaderComponent.new(title: @page.url, subtitle: "#{@page.kind.humanize}#{" · #{@page.http_status}" if @page.http_status}#{" · #{@page.word_count} words" if @page.word_count}") do |header| %>
+  <% header.with_utility_action do %>
+    <%= link_to "All terms", root_path, class: "btn btn-sm btn-ghost" %>
+  <% end %>
+<% end %>
+
+<% if @findings.empty? %>
+  <%= render Ui::EmptyStateComponent.new(title: "No open findings", description: "The audit found nothing wrong here as of the last weekly sweep.") %>
+<% else %>
+  <ul class="list rounded-box bg-base-100 shadow-sm">
+    <% @findings.each do |finding| %>
+      <li class="list-row">
+        <div class="font-medium"><%= finding.description %></div>
+        <div class="text-xs opacity-60">first seen <%= foothold_ago(finding.first_seen_at) %></div>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

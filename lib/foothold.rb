@@ -3,6 +3,7 @@ require "foothold/url"
 require "foothold/visit"
 require "foothold/search_console"
 require "foothold/data_for_seo"
+require "foothold/fetcher"
 require "foothold/configuration"
 require "foothold/engine"
 

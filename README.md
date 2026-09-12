@@ -44,8 +44,9 @@ Every source records a `SweepRun` with a watermark, the last date it fully colle
 |---|---|---|
 | Visits | `Ahoy::Visit` and `Ahoy::Event` (`registered`) | visits, search visits and signups per Page per day |
 | Content inventory | `config.pages` lambda, empty by default | Pages and their target Terms |
-| Search Console | `FOOTHOLD_GOOGLE_SERVICE_ACCOUNT_JSON` | queries, impressions, positions |
-| SERP and keyword data | `FOOTHOLD_DATAFORSEO_LOGIN` / `_PASSWORD` | tracked Term positions, volume, difficulty |
+| Search Console | `FOOTHOLD_GOOGLE_SERVICE_ACCOUNT_JSON` | queries, impressions, positions, index coverage |
+| SERP and keyword data | `FOOTHOLD_DATAFORSEO_LOGIN` / `_PASSWORD` | tracked Term positions, volume, difficulty, rival ranking Terms |
+| Fetching the Site's own pages | `config.fetcher`, a plain `Net::HTTP` client by default | the weekly audit |
 
 Screens render in a host layout (`hub` by default), inherit from the host's `ApplicationController` and use the host's `Ui::*` ViewComponents with Tailwind and DaisyUI class names.
 
@@ -112,6 +113,7 @@ end
 - `app/models/foothold`: Site, Term, Page, PageDay, Reading, Rival, RivalTerm, Lead, SweepRun, and the TermSummary shown in the list
 - `app/services/foothold/sweep`: one class per source
 - `app/services/foothold/leads`: one builder per lead kind
+- `lib/foothold/fetcher.rb`: fetches the Site's own pages for the weekly audit
 - `lib/foothold`: configuration, the Search Console and DataForSEO clients, URL normalisation
 - `app/controllers/foothold`, `app/views/foothold`: the screens
 - `db/migrate`: the migrations that create the `foothold_*` tables
