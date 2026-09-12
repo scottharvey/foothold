@@ -29,6 +29,20 @@ module Foothold
       run.detail.map { |key, value| "#{key}: #{value}" }.join(", ").presence || "–"
     end
 
+    # A source that was skipped (no credential configured) has nothing to
+    # report; fade it so real activity stands out.
+    def sweep_skipped?(run)
+      run.detail["skipped"].present?
+    end
+
+    def sweep_episode_variant(episode)
+      episode.any? { |run| run.status == "failed" } ? :error : :success
+    end
+
+    def sweep_episode_label(episode)
+      "#{episode.first.kind.humanize} sweep · #{foothold_ago(episode.first.started_at)}"
+    end
+
     def playbook_url(lead)
       builder = Foothold.configuration.playbook_url
       return nil if lead.playbook_slug.blank? || builder.nil?

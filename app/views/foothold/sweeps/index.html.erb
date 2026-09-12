@@ -1,7 +1,7 @@
 <% content_for :title, "Sweeps" %>
 <%= render "foothold/shared/header" %>
 
-<%= render Ui::IndexHeaderComponent.new(title: "Sweeps", subtitle: "Collection runs, watermarks and what each one cost") do |header| %>
+<%= render Ui::IndexHeaderComponent.new(title: "Sweeps", subtitle: "Collection runs, grouped by episode, and what each one cost") do |header| %>
   <% header.with_primary_action do %>
     <%= button_to "Sweep now", sweeps_path, method: :post, class: "btn btn-sm btn-primary", form: { class: "inline" } %>
   <% end %>
@@ -10,25 +10,31 @@
   <% end %>
 <% end %>
 
-<% if @runs.empty? %>
+<% if @episodes.empty? %>
   <%= render Ui::EmptyStateComponent.new(title: "No sweeps yet", description: "Press Sweep now above, or wait for the nightly schedule.") %>
 <% else %>
   <%= render Ui::CardComponent.new(body: false) do %>
     <%= render Ui::TableComponent.new(size: :sm) do %>
       <thead>
-        <tr><th>Source</th><th>Kind</th><th>Status</th><th>Watermark</th><th>Started</th><th>Took</th><th>Detail</th></tr>
+        <tr><th>Source</th><th>Status</th><th>Watermark</th><th>Took</th><th>Detail</th></tr>
       </thead>
       <tbody>
-        <% @runs.each do |run| %>
-          <tr>
-            <td class="font-medium"><%= run.name.humanize %></td>
-            <td><%= run.kind.humanize %></td>
-            <td><%= render Ui::BadgeComponent.new(variant: sweep_status_variant(run), soft: true, size: :sm, text: run.status) %></td>
-            <td class="whitespace-nowrap"><%= run.watermark || "–" %></td>
-            <td class="whitespace-nowrap"><%= foothold_ago(run.started_at) %></td>
-            <td class="whitespace-nowrap"><%= run.elapsed ? "#{run.elapsed.round(1)}s" : "–" %></td>
-            <td class="text-xs font-mono opacity-70"><%= sweep_detail(run) %></td>
+        <% @episodes.each do |episode| %>
+          <tr class="bg-base-200/50">
+            <td colspan="5" class="py-2">
+              <span class="text-xs font-semibold uppercase tracking-wide text-base-content/60"><%= sweep_episode_label(episode) %></span>
+              <%= render Ui::BadgeComponent.new(variant: sweep_episode_variant(episode), soft: true, size: :sm, text: sweep_episode_variant(episode) == :error ? "1 or more failed" : "ok") %>
+            </td>
           </tr>
+          <% episode.each do |run| %>
+            <tr class="<%= "opacity-50" if sweep_skipped?(run) %>">
+              <td class="font-medium pl-6"><%= run.name.humanize %></td>
+              <td><%= render Ui::BadgeComponent.new(variant: sweep_status_variant(run), soft: true, size: :sm, text: run.status) %></td>
+              <td class="whitespace-nowrap text-base-content/60"><%= run.watermark || "–" %></td>
+              <td class="whitespace-nowrap text-base-content/60"><%= run.elapsed ? "#{run.elapsed.round(1)}s" : "–" %></td>
+              <td class="text-xs font-mono text-base-content/70"><%= sweep_detail(run) %></td>
+            </tr>
+          <% end %>
         <% end %>
       </tbody>
     <% end %>
@@ -36,9 +42,11 @@
 <% end %>
 
 <section class="mt-10">
-  <%= render Ui::IndexHeaderComponent.new(title: "Digest", subtitle: @last_digest ? "Last sent #{foothold_ago(@last_digest.sent_at)} for the week of #{@last_digest.week_starting.strftime('%-d %b %Y')}" : "Never sent") do |header| %>
-    <% header.with_primary_action do %>
-      <%= button_to "Send digest now", digest_path, method: :post, class: "btn btn-sm", form: { class: "inline" } %>
+  <%= render Ui::CardComponent.new do %>
+    <%= render Ui::IndexHeaderComponent.new(title: "Digest", subtitle: @last_digest ? "Last sent #{foothold_ago(@last_digest.sent_at)} for the week of #{@last_digest.week_starting.strftime('%-d %b %Y')}" : "Never sent") do |header| %>
+      <% header.with_primary_action do %>
+        <%= button_to "Send digest now", digest_path, method: :post, class: "btn btn-sm", form: { class: "inline" } %>
+      <% end %>
     <% end %>
   <% end %>
 </section>

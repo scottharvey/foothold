@@ -3,8 +3,14 @@ module Foothold
   # data: sweep now, weekly audit, and (folded in here rather than its own
   # page) send digest now.
   class SweepsController < ApplicationController
+    # One click runs several sources back to back (inventory, visits, search
+    # console...). Group consecutive same-kind runs into one episode so the
+    # page reads as "what happened last time", not a flat log per source.
+    EPISODE_GAP = 5.minutes
+
     def index
-      @runs = SweepRun.order(id: :desc).limit(50)
+      runs = SweepRun.order(id: :desc).limit(50).to_a
+      @episodes = runs.slice_when { |a, b| a.kind != b.kind || (a.started_at - b.started_at).abs > EPISODE_GAP }.to_a
       @last_digest = @site.digests.order(week_starting: :desc).first
     end
 

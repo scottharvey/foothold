@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.4
+
+- Sweep history groups consecutive same-kind runs into one episode, since a
+  single click runs several sources back to back; skipped sources (no
+  credential configured) are shown but faded so real activity stands out
+- Digest section moved into a card to match the rest of the page
+
 ## 0.5.3
 
 - Sweeps moved into the main nav alongside Queue, Terms, Rivals and Mentions
