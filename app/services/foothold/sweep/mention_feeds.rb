@@ -7,7 +7,9 @@ module Foothold
         "google_alerts" => Foothold::Mentions::GoogleAlerts,
         "hacker_news" => Foothold::Mentions::HackerNews,
         "app_store" => Foothold::Mentions::AppStore,
-        "bluesky" => Foothold::Mentions::Bluesky
+        "bluesky" => Foothold::Mentions::Bluesky,
+        "reddit" => Foothold::Mentions::Reddit,
+        "x" => Foothold::Mentions::X
       }.freeze
 
       def call

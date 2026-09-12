@@ -1,7 +1,7 @@
 module Foothold
   # A place on the web where the product was named.
   class Mention < ApplicationRecord
-    SOURCES = %w[google_alerts hacker_news app_store bluesky reddit github].freeze
+    SOURCES = %w[google_alerts hacker_news app_store bluesky reddit x github].freeze
 
     belongs_to :site
 

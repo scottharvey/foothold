@@ -20,7 +20,7 @@ Built for my own Rails apps and shared as-is under MIT. It assumes a fairly conv
 
 **Referrer**: a domain that sent a visitor.
 
-**Mention**: a place on the web where the product was named. Polled from Google Alerts, Hacker News, App Store reviews and Bluesky.
+**Mention**: a place on the web where the product was named. Polled from Google Alerts, Hacker News, App Store reviews, Bluesky, Reddit and X.
 
 **Finding**: a problem the audit observed on a Page.
 
@@ -47,7 +47,7 @@ Every source records a `SweepRun` with a watermark, the last date it fully colle
 | Search Console | `FOOTHOLD_GOOGLE_SERVICE_ACCOUNT_JSON` | queries, impressions, positions, index coverage |
 | SERP and keyword data | `FOOTHOLD_DATAFORSEO_LOGIN` / `_PASSWORD` | tracked Term positions, volume, difficulty, rival ranking Terms |
 | Fetching the Site's own pages | `config.fetcher`, a plain `Net::HTTP` client by default | the weekly audit |
-| Mentions | `config.mention_feeds`, empty by default | Google Alerts, Hacker News, App Store reviews, Bluesky |
+| Mentions | `config.mention_feeds`, empty by default | Google Alerts, Hacker News, App Store reviews, Bluesky, Reddit, X |
 
 Screens render in a host layout (`hub` by default), inherit from the host's `ApplicationController` and use the host's `Ui::*` ViewComponents with Tailwind and DaisyUI class names.
 
@@ -107,15 +107,41 @@ Foothold.configure do |config|
   config.playbooks = { "term_gap" => "competitor-comparison-posts" }
   config.playbook_url = ->(slug) { main_app.growth_playbook_path(slug) }
 
-  # Mention feeds. Each needs no auth. Leave out a feed to skip its source.
+  # Mention feeds. Google Alerts, Hacker News, App Store and Bluesky need no
+  # auth. Reddit and X need credentials below. Leave out a feed to skip its
+  # source.
   config.mention_feeds = [
     { source: "google_alerts", url: ENV["FOOTHOLD_GOOGLE_ALERTS_RSS"] },
     { source: "hacker_news", query: config.site_name },
     { source: "app_store", app_id: ENV["FOOTHOLD_APP_STORE_ID"], country: "us" },
-    { source: "bluesky", query: config.site_name }
+    { source: "bluesky", query: config.site_name },
+    { source: "reddit", query: config.site_name },
+    { source: "x", query: config.site_name }
   ].select { |feed| feed.values_at(:url, :query, :app_id).any?(&:present?) }
 end
 ```
+
+### Reddit and X credentials
+
+Reddit and X aren't free/no-auth like the other mention sources, so they read
+credentials from `ENV` (or pass `client_id:`/`client_secret:`/`user_agent:`/
+`bearer_token:` directly on the feed hash instead):
+
+**Reddit** — free, but needs an app:
+
+1. Create a "script" app at <https://www.reddit.com/prefs/apps> ("create app" → script).
+2. Set `FOOTHOLD_REDDIT_CLIENT_ID` (the string under the app name) and `FOOTHOLD_REDDIT_CLIENT_SECRET`.
+3. Set `FOOTHOLD_REDDIT_USER_AGENT` to something descriptive, per [Reddit's API rules](https://github.com/reddit-archive/reddit/wiki/API), e.g. `"web:foothold:v1 (by /u/yourname)"`.
+
+Foothold exchanges these for an hourly OAuth2 app-only token on each sweep — no refresh-token bookkeeping needed.
+
+**X** — no free tier for search; needs a paid pay-per-usage (or higher) developer plan:
+
+1. Apply for API access and enable billing at <https://developer.x.com>.
+2. Generate an app-only **Bearer Token** for your app.
+3. Set `FOOTHOLD_X_BEARER_TOKEN`.
+
+X's recent-search endpoint only covers the last 7 days, and pay-per-usage billing is metered per post returned (roughly $0.005/post as of 2026) — cheap for a low-mention-volume product, but check <https://docs.x.com/x-api/getting-started/pricing> for current rates before enabling it.
 
 ## Layout
 
