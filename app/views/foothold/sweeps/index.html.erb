@@ -13,32 +13,35 @@
 <% if @episodes.empty? %>
   <%= render Ui::EmptyStateComponent.new(title: "No sweeps yet", description: "Press Sweep now above, or wait for the nightly schedule.") %>
 <% else %>
-  <%= render Ui::CardComponent.new(body: false) do %>
-    <%= render Ui::TableComponent.new(size: :sm) do %>
-      <thead>
-        <tr><th>Source</th><th>Status</th><th>Watermark</th><th>Took</th><th>Detail</th></tr>
-      </thead>
-      <tbody>
-        <% @episodes.each do |episode| %>
-          <tr class="bg-base-200/50">
-            <td colspan="5" class="py-2">
-              <span class="text-xs font-semibold uppercase tracking-wide text-base-content/60"><%= episode.first.kind.humanize %> sweep · <%= foothold_ago(episode.first.started_at) %></span>
-              <%= render Ui::BadgeComponent.new(variant: sweep_episode_variant(episode), soft: true, size: :sm, text: sweep_episode_variant(episode) == :error ? "1 or more failed" : "ok") %>
-            </td>
-          </tr>
-          <% episode.each do |run| %>
-            <tr class="<%= "opacity-50" if sweep_skipped?(run) %>">
-              <td class="font-medium pl-6"><%= run.name.humanize %></td>
-              <td><%= render Ui::BadgeComponent.new(variant: sweep_status_variant(run), soft: true, size: :sm, text: run.status) %></td>
-              <td class="whitespace-nowrap text-base-content/60"><%= run.watermark || "–" %></td>
-              <td class="whitespace-nowrap text-base-content/60"><%= run.elapsed ? "#{run.elapsed.round(1)}s" : "–" %></td>
-              <td class="text-xs font-mono text-base-content/70"><%= sweep_detail(run) %></td>
-            </tr>
+  <div class="flex flex-col gap-2">
+    <% @episodes.each_with_index do |episode, index| %>
+      <details class="collapse collapse-arrow rounded-box border border-base-300 bg-base-100" <%= "open" if index.zero? %>>
+        <summary class="collapse-title min-h-0 py-2 flex items-center gap-2">
+          <span class="text-xs font-semibold uppercase tracking-wide text-base-content/60"><%= episode.first.kind.humanize %> sweep · <%= foothold_ago(episode.first.started_at) %></span>
+          <%= render Ui::BadgeComponent.new(variant: sweep_episode_variant(episode), soft: true, size: :sm, text: sweep_episode_variant(episode) == :error ? "1 or more failed" : "ok") %>
+          <span class="text-xs text-base-content/40"><%= pluralize(episode.size, "source") %></span>
+        </summary>
+        <div class="collapse-content !p-0">
+          <%= render Ui::TableComponent.new(size: :sm) do %>
+            <thead>
+              <tr><th>Source</th><th>Status</th><th>Watermark</th><th>Took</th><th>Detail</th></tr>
+            </thead>
+            <tbody>
+              <% episode.each do |run| %>
+                <tr class="<%= "opacity-50" if sweep_skipped?(run) %>">
+                  <td class="font-medium pl-6"><%= run.name.humanize %></td>
+                  <td><%= render Ui::BadgeComponent.new(variant: sweep_status_variant(run), soft: true, size: :sm, text: run.status) %></td>
+                  <td class="whitespace-nowrap text-base-content/60"><%= run.watermark || "–" %></td>
+                  <td class="whitespace-nowrap text-base-content/60"><%= run.elapsed ? "#{run.elapsed.round(1)}s" : "–" %></td>
+                  <td class="text-xs font-mono text-base-content/70"><%= sweep_detail(run) %></td>
+                </tr>
+              <% end %>
+            </tbody>
           <% end %>
-        <% end %>
-      </tbody>
+        </div>
+      </details>
     <% end %>
-  <% end %>
+  </div>
 <% end %>
 
 <section class="mt-10">

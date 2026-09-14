@@ -1,0 +1,96 @@
+<% content_for :title, @lead.summary %>
+<%= render "foothold/shared/header" %>
+
+<% subtitle = "#{@lead.kind.humanize} · opened #{foothold_ago(@lead.opened_at)}" %>
+<% subtitle += " · #{@lead.state}, by #{@lead.resolved_by}" unless @lead.open? %>
+<%= render Ui::IndexHeaderComponent.new(title: @lead.summary, subtitle: subtitle) do |header| %>
+  <% header.with_meta do %>
+    <%= render Ui::BadgeComponent.new(variant: lead_variant(@lead), soft: true, size: :sm, text: @lead.kind.humanize) %>
+  <% end %>
+  <% header.with_utility_action do %>
+    <%= link_to "Back to queue", root_path, class: "btn btn-sm btn-ghost" %>
+  <% end %>
+<% end %>
+
+<div class="flex flex-col gap-6">
+  <% if (explanation = lead_explanation(@lead)) %>
+    <%= render Ui::CardComponent.new do %>
+      <div class="text-xs uppercase tracking-wide opacity-60 mb-2">What this means</div>
+      <p class="text-sm mb-3"><%= explanation[:what] %></p>
+      <div class="text-xs uppercase tracking-wide opacity-60 mb-2">Why it matters</div>
+      <p class="text-sm mb-3"><%= explanation[:why] %></p>
+      <div class="text-xs uppercase tracking-wide opacity-60 mb-2">Typically helps</div>
+      <p class="text-sm opacity-80"><%= explanation[:tip] %></p>
+    <% end %>
+  <% end %>
+
+  <% if @lead.evidence.present? %>
+    <%= render Ui::CardComponent.new do %>
+      <div class="text-xs uppercase tracking-wide opacity-60 mb-1">Evidence</div>
+      <div class="text-sm"><%= @lead.evidence %></div>
+    <% end %>
+  <% end %>
+
+  <% links = lead_where_links(@lead) %>
+  <% if links.any? %>
+    <%= render Ui::CardComponent.new do %>
+      <div class="text-xs uppercase tracking-wide opacity-60 mb-2">Where</div>
+      <ul class="flex flex-col gap-1">
+        <% links.each do |link| %>
+          <li>
+            <%= link_to link[:label], link[:url], class: "link link-hover text-sm #{'font-mono' if link[:external]}",
+                                                  **(link[:external] ? { target: "_blank", rel: "noopener" } : {}) %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  <% end %>
+
+  <% if (rivals = @lead.payload["rivals"]).present? %>
+    <%= render Ui::CardComponent.new(body: false) do %>
+      <div class="text-xs uppercase tracking-wide opacity-60 px-4 pt-4">Ranking rivals</div>
+      <%= render Ui::TableComponent.new(size: :sm) do %>
+        <thead><tr><th>Domain</th><th class="text-right">Position</th><th>Landing page</th></tr></thead>
+        <tbody>
+          <% rivals.each do |rival| %>
+            <tr>
+              <td><%= rival["domain"] %></td>
+              <td class="text-right tabular-nums">#<%= rival["position"] %></td>
+              <td class="font-mono text-xs">
+                <% if rival["url"].present? %>
+                  <%= link_to rival["url"], rival["url"], target: "_blank", rel: "noopener", class: "link link-hover" %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <% details = lead_detail_rows(@lead) %>
+  <% if details.any? %>
+    <%= render Ui::CardComponent.new(body: false) do %>
+      <%= render Ui::TableComponent.new(size: :sm) do %>
+        <tbody>
+          <% details.each do |key, value| %>
+            <tr><td class="font-medium w-1/3"><%= key.humanize %></td><td><%= value %></td></tr>
+          <% end %>
+        </tbody>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <div class="flex items-center gap-2">
+    <% if (url = playbook_url(@lead)) %>
+      <%= link_to "Playbook", url, class: "btn btn-sm btn-ghost" %>
+    <% end %>
+    <% if @lead.open? %>
+      <% if @lead.kind == "track_this" %>
+        <%= button_to "Track", track_lead_path(@lead), class: "btn btn-sm btn-primary", form: { class: "inline" } %>
+      <% end %>
+      <%= button_to "Done", done_lead_path(@lead), class: "btn btn-sm", form: { class: "inline" } %>
+      <%= button_to "Dismiss", dismiss_lead_path(@lead), class: "btn btn-sm btn-ghost", form: { class: "inline" } %>
+    <% end %>
+  </div>
+</div>

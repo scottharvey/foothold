@@ -72,6 +72,12 @@ module Foothold
       update!(state: state, resolved_at: Time.current, resolved_by: by)
     end
 
+    # Bulk equivalent of #resolve!, for the Queue's multi-select actions.
+    # Returns the number of leads resolved.
+    def self.resolve_many!(site:, ids:, state:, by: "operator")
+      site.leads.open.where(id: ids).update_all(state: state, resolved_at: Time.current, resolved_by: by, updated_at: Time.current)
+    end
+
     def term
       Term.find_by(id: term_id) if term_id
     end

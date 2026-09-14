@@ -22,17 +22,36 @@
 <% if @leads.empty? %>
   <%= render Ui::EmptyStateComponent.new(title: "Queue is empty", description: "Leads appear after a sweep finds something worth doing.") %>
 <% else %>
+  <%# Row checkboxes live in the list below and join this form via the HTML5
+      `form` attribute, since each row's own Done/Dismiss/Track button is its
+      own <form> (button_to) and forms can't nest. %>
+  <%= form_with url: bulk_done_leads_path, method: :post, id: "queue-bulk-form" do %>
+    <div class="flex items-center justify-between mb-2">
+      <label class="flex items-center gap-2 pl-4 text-xs opacity-60 cursor-pointer">
+        <input type="checkbox" id="queue-select-all" class="checkbox checkbox-xs">
+        Select all
+      </label>
+      <div class="flex items-center gap-2">
+        <button type="submit" formaction="<%= bulk_done_leads_path %>" class="btn btn-xs">Done</button>
+        <button type="submit" formaction="<%= bulk_dismiss_leads_path %>" class="btn btn-xs btn-ghost">Dismiss</button>
+      </div>
+    </div>
+  <% end %>
+
+  <script nonce="<%= content_security_policy_nonce %>">
+    document.getElementById("queue-select-all").addEventListener("change", function () {
+      document.querySelectorAll(".lead-checkbox").forEach(function (checkbox) { checkbox.checked = this.checked }, this);
+    });
+  </script>
+
   <ul class="list rounded-box bg-base-100 shadow-sm">
     <% @leads.each do |lead| %>
       <li class="list-row items-center" id="<%= dom_id(lead) %>">
+        <input type="checkbox" name="lead_ids[]" value="<%= lead.id %>" form="queue-bulk-form" class="checkbox checkbox-sm lead-checkbox" aria-label="Select lead">
         <div><%= render Ui::BadgeComponent.new(variant: lead_variant(lead), soft: true, size: :sm, text: lead.kind.humanize) %></div>
-        <div class="min-w-0">
+        <div class="min-w-0 list-col-grow">
           <div class="font-medium">
-            <% if (url = page_url_for(lead)) %>
-              <%= link_to lead.summary, url, class: "link link-hover" %>
-            <% else %>
-              <%= lead.summary %>
-            <% end %>
+            <%= link_to lead.summary, lead_path(lead), class: "link link-hover" %>
           </div>
           <div class="text-xs opacity-60"><%= lead.evidence %><%= " · " if lead.evidence.present? %>opened <%= foothold_ago(lead.opened_at) %></div>
         </div>

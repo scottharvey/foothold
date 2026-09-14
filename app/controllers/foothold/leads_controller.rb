@@ -1,6 +1,9 @@
 module Foothold
   class LeadsController < ApplicationController
-    before_action :set_lead
+    before_action :set_lead, except: %i[bulk_done bulk_dismiss]
+
+    def show
+    end
 
     def done
       @lead.resolve!("done")
@@ -24,7 +27,23 @@ module Foothold
       end
     end
 
+    def bulk_done
+      bulk_resolve!("done")
+    end
+
+    def bulk_dismiss
+      bulk_resolve!("dismissed")
+    end
+
     private
+
+    def bulk_resolve!(state)
+      ids = Array(params[:lead_ids]).reject(&:blank?)
+      return redirect_back_or_to(root_path, alert: "Select at least one lead.") if ids.empty?
+
+      count = Lead.resolve_many!(site: @site, ids: ids, state: state)
+      redirect_back_or_to root_path, notice: "#{count} #{'lead'.pluralize(count)} #{state}."
+    end
 
     def set_lead
       @lead = @site.leads.find(params[:id])

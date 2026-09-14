@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.5.14
+
+- Fix: the Queue's row checkboxes (added for bulk actions) shifted DaisyUI's
+  `.list-row` grid by one column, so the badge silently took over the
+  "fill remaining space" track instead of the summary text — giving every
+  row a ragged, inconsistently-indented title. The summary column is now
+  marked `list-col-grow` explicitly instead of relying on column position.
+
+## 0.5.13
+
+- Lead detail pages explain the SEO behind each kind in plain language for
+  an operator who isn't an SEO: what the signal means, why it matters, and
+  what typically helps — separate from config.playbooks, which stays the
+  host's own specific how-to
+
+## 0.5.12
+
+- Every lead in the Queue is now clickable, not just the ones tied to a
+  Page. Each opens its own detail screen: evidence, links to wherever the
+  lead points (a Foothold page/term, a mention's actual URL, a referrer's
+  site, a page-two landing URL), a ranking-rivals table for term gaps, and
+  the remaining payload as a detail table, plus the same Playbook/Track/
+  Done/Dismiss actions as the row
+
+## 0.5.11
+
+- Queue: select any number of leads and Done or Dismiss them together,
+  instead of one button click per lead
+
+## 0.5.10
+
+- Sweep history episodes are now collapsible (native `<details>`, no JS):
+  only the latest episode is open by default, so a long history doesn't bury
+  the most recent run under dozens of older ones
+
 ## 0.5.9
 
 - Fix: `Mentions::HackerNews` sent `feed[:query]` unquoted to Algolia's

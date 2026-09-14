@@ -9,10 +9,85 @@ module Foothold
       LEAD_VARIANTS.fetch(lead.kind, :neutral)
     end
 
-    # The host's how-to for this lead, resolved in the view so main_app routes work.
-    def page_url_for(lead)
-      page = lead.page
-      page && page_path(page)
+    # Plain-language SEO background per lead kind, for an operator who isn't
+    # an SEO. "what" explains the signal itself; "why" explains why it's
+    # worth acting on; "tip" is a generic starting point (kept separate from
+    # config.playbooks, which is host-specific how-to, not general theory).
+    LEAD_EXPLANATIONS = {
+      "drop" => {
+        what: "One of your tracked search terms fell in Google's rankings this week compared to last week.",
+        why: "A lower position usually means fewer people see the page for that search, which usually means fewer clicks. Search traffic is heavily front-loaded onto the first few results, so even a few places' drop can cost real visits.",
+        tip: "Check whether the page still exists and loads correctly, whether its content is still accurate and up to date, and whether a competitor recently published something stronger for the same term. Rankings also dip on their own sometimes and recover — a single week's drop isn't always a fire."
+      },
+      "leaky_page" => {
+        what: "A page is getting real search traffic but nobody who lands on it signs up.",
+        why: "This is the frustrating kind of SEO problem: the ranking work paid off (people are finding the page), but the page itself isn't convincing them to do anything once they arrive. Traffic without conversion is a leak, not a win.",
+        tip: "Read the page as if you were the searcher: does it answer what they were likely looking for, and is there an obvious, low-friction next step (a signup button, a clear call to action)? Mismatched intent or a buried/missing CTA are the usual culprits."
+      },
+      "not_indexed" => {
+        what: "Google hasn't added this page to its index, even though it's been in your sitemap for a while.",
+        why: "A page that isn't indexed cannot appear in search results at all, for any term — it's invisible to Google entirely, regardless of how good the content is.",
+        tip: "Check Google Search Console for the specific reason (a noindex tag, a robots.txt block, being flagged as duplicate/thin content, or simply not yet crawled). Once the cause is fixed, you can request indexing directly from Search Console rather than waiting."
+      },
+      "term_gap" => {
+        what: "A competitor ranks in the top 10 for a search term that you don't rank for at all (outside the top 30).",
+        why: "This is one of the clearest signals in SEO: if a rival can rank for it, the term is provably winnable, and you're leaving that traffic on the table with no page competing for it.",
+        tip: "Look at what the top-ranking page actually covers, then decide whether an existing page of yours could be expanded to target the term, or whether it deserves a new page of its own."
+      },
+      "page_two" => {
+        what: "A term is averaging a position just outside page one (roughly 11th-20th) with enough search volume to matter.",
+        why: "Click-through rate falls off sharply after the first page of results — being 11th gets a small fraction of the clicks that being in the top 3 does. Terms sitting just off page one are usually the cheapest wins available, since you're already close.",
+        tip: "Small, targeted improvements often move the needle here: freshen the content, tighten it to better match what the query is actually asking for, or get a link or two pointing at the page."
+      },
+      "title_mismatch" => {
+        what: "A page's HTML title tag doesn't contain the phrase the page is meant to target.",
+        why: "The title tag does double duty: it's one of the strongest signals Google uses to understand what a page is about, and it's also the clickable blue headline shown in search results. Missing the target phrase can hurt both the ranking and the click-through rate.",
+        tip: "Rewrite the title so it naturally reads well for a human AND includes the target phrase, ideally near the start."
+      },
+      "track_this" => {
+        what: "Google is already showing your site for this search term often enough to notice, but Foothold isn't tracking it yet.",
+        why: "Untracked terms are blind spots — the term might be trending up, might be worth a dedicated page, or might just be noise, but you won't know its trend until you start watching it.",
+        tip: "Track it, watch its position over the next few weeks, and decide from there whether it deserves content of its own."
+      },
+      "new_referrer" => {
+        what: "A website you don't control started sending you real visitors this week, other than a search engine.",
+        why: "Someone linked to you or mentioned you somewhere. Beyond the direct traffic, a link from another site can also be a positive signal to Google about your site's credibility, depending on the source.",
+        tip: "Look at where the traffic is coming from. If it's a person or a community, a reply or a thank-you can turn a one-off mention into an ongoing relationship."
+      },
+      "mention" => {
+        what: "Your product's name showed up somewhere on the web — a forum post, a review, a social post — that Foothold is watching.",
+        why: "Mentions are a reputation signal even when they aren't a link: they show up in searches for your product name, shape what people think before they visit your site, and an unlinked mention can often be turned into a linked one just by asking.",
+        tip: "Reply where it makes sense to. If the mention doesn't already link to your site, a polite ask for a link is a normal, low-pressure request in most communities."
+      },
+      "audit" => {
+        what: "The weekly technical audit found one or more open issues on this page (things like broken links, missing image text, or a title/description that's too short or too long).",
+        why: "These are hygiene issues rather than content problems — they don't affect whether the page's writing is good, but they can quietly cap how well the page ranks or how accessible it is, even when the content itself is strong.",
+        tip: "Open the page for the specific list of findings and work through them; most are quick, mechanical fixes rather than rewrites."
+      }
+    }.freeze
+
+    def lead_explanation(lead)
+      LEAD_EXPLANATIONS[lead.kind]
+    end
+
+    # Where a lead points: Foothold's own Page/Term screens, plus whatever
+    # external URL its payload carries (a mention's actual post, a page-two
+    # landing URL not yet in the page index, or a new referrer's own site).
+    def lead_where_links(lead)
+      payload = lead.payload
+      links = []
+      links << { label: "Foothold page: #{lead.page.url}", url: page_path(lead.page) } if lead.page
+      links << { label: "Foothold term: #{lead.term.phrase}", url: term_path(lead.term) } if lead.term
+      links << { label: payload["url"], url: payload["url"], external: true } if payload["url"].present?
+      links << { label: payload["landing_url"], url: payload["landing_url"], external: true } if lead.page.blank? && payload["landing_url"].present?
+      links << { label: "https://#{payload['domain']}", url: "https://#{payload['domain']}", external: true } if payload["domain"].present?
+      links
+    end
+
+    # Payload fields not already surfaced elsewhere on the lead's detail page
+    # (evidence, and whatever lead_where_links already turned into a link).
+    def lead_detail_rows(lead)
+      lead.payload.except("evidence", "url", "domain", "landing_url", "rivals", "phrase")
     end
 
     SWEEP_STATUS_VARIANTS = { "ok" => :success, "failed" => :error, "running" => :warning }.freeze

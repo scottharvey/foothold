@@ -6,11 +6,15 @@ Foothold::Engine.routes.draw do
   resource :digest, only: :create
   resources :pages, only: :show
   resources :mentions, only: :index
-  resources :leads, only: [] do
+  resources :leads, only: [ :show ] do
     member do
       post :done
       post :dismiss
       post :track
+    end
+    collection do
+      post :bulk_done
+      post :bulk_dismiss
     end
   end
 end
