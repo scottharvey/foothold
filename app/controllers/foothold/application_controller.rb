@@ -1,5 +1,7 @@
 module Foothold
   class ApplicationController < Foothold.configuration.parent_controller.constantize
+    include Pagy::Method
+
     layout Foothold.configuration.layout
 
     # The host's own guards redirect with host route helpers, which do not

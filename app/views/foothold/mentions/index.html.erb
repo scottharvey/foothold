@@ -1,7 +1,7 @@
 <% content_for :title, "Mentions" %>
 <%= render "foothold/shared/header" %>
 
-<%= render Ui::IndexHeaderComponent.new(title: "Mentions", subtitle: "#{@mentions.size} #{'mention'.pluralize(@mentions.size)}") %>
+<%= render Ui::IndexHeaderComponent.new(title: "Mentions", subtitle: "#{@pagy.count} #{'mention'.pluralize(@pagy.count)}") %>
 
 <% if @mentions.empty? %>
   <%= render Ui::EmptyStateComponent.new(title: "No mentions yet", description: "The nightly sweep polls Google Alerts, Hacker News, App Store reviews and Bluesky, once feeds are configured.") %>
@@ -20,4 +20,5 @@
       </li>
     <% end %>
   </ul>
+  <%= foothold_pagy_nav(@pagy) %>
 <% end %>

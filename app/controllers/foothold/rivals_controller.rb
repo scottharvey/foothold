@@ -1,8 +1,8 @@
 module Foothold
   class RivalsController < ApplicationController
     def index
-      @rivals = @site.rivals.alphabetical
-      @rival_counts = RivalTerm.where(rival_id: @rivals.select(:id)).group(:rival_id).count
+      @pagy, @rivals = pagy(@site.rivals.alphabetical)
+      @rival_counts = RivalTerm.where(rival_id: @rivals.map(&:id)).group(:rival_id).count
     end
 
     def create

@@ -1,7 +1,7 @@
 <% content_for :title, "Foothold" %>
 <%= render "foothold/shared/header" %>
 
-<%= render Ui::IndexHeaderComponent.new(title: "Queue", subtitle: "#{@leads.size} open #{'lead'.pluralize(@leads.size)}") do |header| %>
+<%= render Ui::IndexHeaderComponent.new(title: "Queue", subtitle: "#{@pagy.count} open #{'lead'.pluralize(@pagy.count)}") do |header| %>
   <% header.with_meta do %>
     <% if @last_sweep %>
       <span class="text-xs opacity-60">Last nightly sweep <%= foothold_ago(@last_sweep.started_at) %><%= ", #{@last_sweep.status}" unless @last_sweep.status == "ok" %></span>
@@ -71,4 +71,5 @@
       </li>
     <% end %>
   </ul>
+  <%= foothold_pagy_nav(@pagy) %>
 <% end %>

@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.6.3
+
+- Pagination (new `pagy` dependency) on every index page — Queue, Terms,
+  Mentions, Rivals, Sweeps. Terms was the one actually slow to load: its
+  index built a full `TermSummary` (readings, 28-day series, deltas) for
+  *every* term on the site, including every rival-discovered term, before
+  rendering any of it. It now computes just enough (a single aggregate
+  query) to sort and paginate the term list, then builds real summaries only
+  for the current page.
+- Fix: `TermSummary::DAYS` was actually unreachable from outside the class —
+  `Data.define(...) do DAYS = 28 end` lexically scopes that assignment to
+  `Foothold`, not to `TermSummary`, so `Foothold::TermSummary::DAYS` raised
+  `NameError`. Only bit because the new Terms index needed to reuse that
+  window; fixed with `const_set` so it's attached to the right class.
+- Foothold now renders its own pagination controls (`foothold_pagy_nav`)
+  instead of assuming a host defines `pagy_nav` itself.
+
 ## 0.6.2
 
 - Fix: DataForSEO status `40101` ("Internal SE Server Error") means Google

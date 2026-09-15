@@ -9,8 +9,9 @@ module Foothold
     EPISODE_GAP = 5.minutes
 
     def index
-      runs = SweepRun.order(id: :desc).limit(50).to_a
-      @episodes = runs.slice_when { |a, b| a.kind != b.kind || (a.started_at - b.started_at).abs > EPISODE_GAP }.to_a
+      runs = SweepRun.order(id: :desc).limit(200).to_a
+      episodes = runs.slice_when { |a, b| a.kind != b.kind || (a.started_at - b.started_at).abs > EPISODE_GAP }.to_a
+      @pagy, @episodes = pagy(episodes)
       @last_digest = @site.digests.order(week_starting: :desc).first
     end
 

@@ -3,8 +3,9 @@ module Foothold
     before_action :set_term, only: %i[show update destroy]
 
     def index
-      @summaries = TermSummary.ordered(TermSummary.for(@site.terms))
-      @tracked_count = @summaries.count { |summary| summary.term.tracked? }
+      @tracked_count = @site.terms.tracked.count
+      @pagy, page_terms = pagy(ordered_terms)
+      @summaries = TermSummary.for(page_terms)
     end
 
     def show
@@ -33,6 +34,18 @@ module Foothold
     end
 
     private
+
+    # Same ordering as TermSummary.ordered (tracked first, then busiest, then
+    # alphabetical) computed from a single aggregate query instead of loading
+    # every term's readings — building a full TermSummary per term (as the
+    # old index did, for every term, before paginating) was what made this
+    # page slow to load once rival-discovered terms piled up.
+    def ordered_terms
+      impressions = Reading.where(term_id: @site.terms.select(:id), source: "search_console",
+                                   date: (Date.current - (TermSummary::DAYS - 1))..Date.current)
+                            .group(:term_id).sum(:impressions)
+      @site.terms.to_a.sort_by { |term| [ term.tracked? ? 0 : 1, -impressions.fetch(term.id, 0), term.phrase ] }
+    end
 
     def set_term
       @term = @site.terms.find(params[:id])

@@ -125,6 +125,27 @@ module Foothold
       episode.any? { |run| run.status == "failed" } ? :error : :success
     end
 
+    # Page links for a Pagy result, styled to match Foothold's own daisyUI
+    # chrome. Foothold doesn't rely on the host defining its own `pagy_nav` —
+    # this gem depends on pagy directly and renders its own.
+    def foothold_pagy_nav(pagy)
+      return "" if pagy.pages <= 1
+
+      a = pagy.send(:a_lambda)
+      html = +'<nav class="flex justify-center my-4" aria-label="Pages"><div class="join">'
+      html << (pagy.previous ? a.(pagy.previous, "«", classes: "join-item btn btn-sm") : '<span class="join-item btn btn-sm btn-disabled">«</span>')
+      pagy.send(:series).each do |item|
+        html << case item
+        when Integer then a.(item, classes: "join-item btn btn-sm")
+        when String then %(<span class="join-item btn btn-sm btn-active" aria-current="page">#{item}</span>)
+        when :gap then '<span class="join-item btn btn-sm btn-disabled">&hellip;</span>'
+        end
+      end
+      html << (pagy.next ? a.(pagy.next, "»", classes: "join-item btn btn-sm") : '<span class="join-item btn btn-sm btn-disabled">»</span>')
+      html << "</div></nav>"
+      html.html_safe
+    end
+
     def playbook_url(lead)
       builder = Foothold.configuration.playbook_url
       return nil if lead.playbook_slug.blank? || builder.nil?

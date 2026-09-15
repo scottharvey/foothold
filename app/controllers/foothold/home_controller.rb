@@ -3,7 +3,7 @@ module Foothold
   class HomeController < ApplicationController
     def index
       @kinds = @site.leads.open.distinct.pluck(:kind).sort_by { |kind| Lead::KINDS.index(kind) }
-      @leads = @site.leads.open.of_kind(params[:kind]).by_priority
+      @pagy, @leads = pagy(@site.leads.open.of_kind(params[:kind]).by_priority)
       @last_sweep = SweepRun.latest("nightly")
     end
   end

@@ -2,11 +2,15 @@ module Foothold
   # What the term list shows for one Term over the last 28 days. Positions come
   # from Search Console when it has seen the Term, otherwise from SERP checks.
   TermSummary = Data.define(:term, :position, :delta, :series, :impressions, :clicks, :signups, :serp_position) do
-    DAYS = 28
+    # A block passed to Data.define is lexically scoped to Foothold, not to
+    # this class, so a plain `DAYS = 28` here would actually define
+    # Foothold::DAYS — const_set attaches it to TermSummary itself, where
+    # `TermSummary::DAYS` (used outside this block) expects to find it.
+    const_set(:DAYS, 28)
 
     def self.for(terms, today: Date.current)
       terms = terms.to_a
-      from = today - (DAYS - 1)
+      from = today - (TermSummary::DAYS - 1)
       readings = Reading.where(term_id: terms.map(&:id), date: from..today).chronological.group_by(&:term_id)
 
       terms.map do |term|
