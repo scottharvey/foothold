@@ -80,6 +80,34 @@ module Foothold
           existing files in that directory (frontmatter: title, term, rival, description;
           markdown body). Pull real product copy from `config/features.yml`.
 
+          This has to read as an actual comparison, not a #{Foothold.configuration.site_name}
+          feature description with #{payload['domain']}'s name in the intro. Before writing,
+          look up #{payload['domain']}'s real pricing, plans, and feature set from its own
+          site. Then:
+
+          - Include a markdown comparison table (features, pricing/plans, platforms,
+            or whatever axes actually differ) near the top, right after the intro.
+          - Where #{payload['domain']} has a feature we also have, say so ("yes, #{payload['domain']}
+            has X too, but ...") instead of ignoring it. Pretending a shared feature
+            doesn't exist is the fastest way to lose a reader's trust.
+          - Don't declare an overall winner. Say plainly who #{payload['domain']} is
+            still the better fit for, alongside who #{Foothold.configuration.site_name}
+            fits better. Pages that recommend both products for different people convert
+            better than pages that only attack the competitor.
+          - If #{payload['domain']}'s users would need to bring existing data over
+            (decks, notes, whatever the category's data unit is), and `config/features.yml`
+            documents an import path for it, call that out specifically as the switching
+            story. That's the single most useful thing to a reader who already uses
+            #{payload['domain']} and is deciding whether leaving is worth the hassle.
+          - Add a short FAQ section (3-4 Q&As) covering things a switcher would ask:
+            pricing, migrating/importing existing data, free plan availability, etc.
+          - Close with a one-line call to action linking to sign-up or the relevant
+            product page.
+
+          Only state #{payload['domain']}'s pricing or capabilities you actually verified
+          on its site. If something isn't verifiable, leave it out rather than guess, and
+          never adjust either product's real pricing to make the comparison look better.
+
           Where a screenshot would genuinely help (a side-by-side comparison, a
           specific screen the rival doesn't have), add it to frontmatter as
           `screenshots: [{basename: short-slug, alt: "what it shows"}]` — one to
