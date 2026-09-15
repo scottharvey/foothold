@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.4
+
+- The `alternative_gap` GitHub issue prompt now pushes drafters toward an
+  actual comparison instead of a product description with the rival's name
+  in the intro: research the rival's real pricing/features, add a comparison
+  table, acknowledge shared features ("yes, but ..."), recommend a buyer for
+  each product instead of declaring a winner, lead with the switching/import
+  story when we have one, add a short FAQ, and close with a CTA.
+
 ## 0.6.3
 
 - Pagination (new `pagy` dependency) on every index page — Queue, Terms,
