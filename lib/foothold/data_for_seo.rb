@@ -12,6 +12,8 @@ module Foothold
     ENDPOINT = "https://api.dataforseo.com/v3/".freeze
     OK = 20_000
     PARTIAL_RESULTS = 40_106 # some pages timed out; you're not charged for them and the rest of the result is still usable
+    TRANSIENT_SE_ERROR = 40_101 # the search engine itself failed to respond; DataForSEO's own docs say to resubmit
+    MAX_ATTEMPTS = 3
 
     attr_reader :cost, :requests
 
@@ -70,7 +72,9 @@ module Foothold
     private
 
     # Returns the flattened result arrays of every task in the response.
-    def post(path, tasks)
+    # Retries the whole request when the search engine itself failed, since
+    # DataForSEO's own docs say that's transient and worth resubmitting.
+    def post(path, tasks, attempt: 1)
       uri = @endpoint + path
       request = Net::HTTP::Post.new(uri, "Content-Type" => "application/json", "User-Agent" => "Foothold/1.0", "Accept" => "application/json")
       request.basic_auth(@login, @password)
@@ -86,6 +90,10 @@ module Foothold
 
       Array(payload["tasks"]).flat_map do |task|
         next Array(task["result"]) if task["status_code"] == OK || task["status_code"] == PARTIAL_RESULTS
+        if task["status_code"] == TRANSIENT_SE_ERROR && attempt < MAX_ATTEMPTS
+          sleep(attempt)
+          return post(path, tasks, attempt: attempt + 1)
+        end
 
         raise Error, "#{path}: #{task['status_message']}"
       end

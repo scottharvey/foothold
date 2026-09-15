@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.2
+
+- Fix: DataForSEO status `40101` ("Internal SE Server Error") means Google
+  itself failed to respond, and DataForSEO's own docs say to resubmit the
+  task — but the client treated it as a permanent failure, aborting the
+  whole Serp sweep (and every term after the failing one) for the day. Now
+  retries up to 3 times with a short backoff before giving up.
+
 ## 0.6.1
 
 - Fix: the DataForSEO client sent no `User-Agent`/`Accept` headers (Ruby's
