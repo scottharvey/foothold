@@ -1,8 +1,8 @@
 <% content_for :title, @lead.summary %>
 <%= render "foothold/shared/header" %>
 
-<% subtitle = "#{@lead.kind.humanize} · opened #{foothold_ago(@lead.opened_at)}" %>
-<% subtitle += " · #{@lead.state}, by #{@lead.resolved_by}" unless @lead.open? %>
+<% subtitle = safe_join([@lead.kind.humanize, "· opened", foothold_ago(@lead.opened_at)], " ") %>
+<% subtitle = safe_join([subtitle, "· #{@lead.state}, by #{@lead.resolved_by}"], " ") unless @lead.open? %>
 <%= render Ui::IndexHeaderComponent.new(title: @lead.summary, subtitle: subtitle) do |header| %>
   <% header.with_meta do %>
     <%= render Ui::BadgeComponent.new(variant: lead_variant(@lead), soft: true, size: :sm, text: @lead.kind.humanize) %>

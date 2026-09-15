@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.15
+
+- Fix: the lead show page's subtitle built its "opened X ago" `<time>` tag
+  with plain string interpolation, which drops Rails' `html_safe` flag —
+  so the shared header component escaped it and printed the raw `<time
+  datetime="...">` markup as visible text instead of rendering it. Built
+  with `safe_join` instead so the tag renders normally.
+
 ## 0.5.14
 
 - Fix: the Queue's row checkboxes (added for bulk actions) shifted DaisyUI's
