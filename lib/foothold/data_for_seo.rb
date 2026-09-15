@@ -11,6 +11,7 @@ module Foothold
 
     ENDPOINT = "https://api.dataforseo.com/v3/".freeze
     OK = 20_000
+    PARTIAL_RESULTS = 40_106 # some pages timed out; you're not charged for them and the rest of the result is still usable
 
     attr_reader :cost, :requests
 
@@ -71,7 +72,7 @@ module Foothold
     # Returns the flattened result arrays of every task in the response.
     def post(path, tasks)
       uri = @endpoint + path
-      request = Net::HTTP::Post.new(uri, "Content-Type" => "application/json")
+      request = Net::HTTP::Post.new(uri, "Content-Type" => "application/json", "User-Agent" => "Foothold/1.0", "Accept" => "application/json")
       request.basic_auth(@login, @password)
       request.body = tasks.to_json
 
@@ -84,9 +85,9 @@ module Foothold
       raise Error, "#{path}: #{payload['status_message']}" unless payload["status_code"] == OK
 
       Array(payload["tasks"]).flat_map do |task|
-        raise Error, "#{path}: #{task['status_message']}" unless task["status_code"] == OK
+        next Array(task["result"]) if task["status_code"] == OK || task["status_code"] == PARTIAL_RESULTS
 
-        Array(task["result"])
+        raise Error, "#{path}: #{task['status_message']}"
       end
     end
   end

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.1
+
+- Fix: the DataForSEO client sent no `User-Agent`/`Accept` headers (Ruby's
+  bare default), and treated any non-`20000` task status as a hard failure —
+  including status `40106` ("Task completed with partial results"), which
+  DataForSEO returns when some SERP pages time out but still hands back
+  whatever it did retrieve, uncharged. The Serp sweep was failing every run
+  because of this. Partial-result tasks now keep their usable results
+  instead of being discarded.
+
 ## 0.6.0
 
 - Programmatic SEO pages, first template (alternatives pages): a new
