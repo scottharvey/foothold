@@ -62,6 +62,9 @@
           <% if lead.kind == "track_this" %>
             <%= button_to "Track", track_lead_path(lead), class: "btn btn-xs btn-primary", form: { class: "inline" } %>
           <% end %>
+          <% if lead.kind == "alternative_gap" %>
+            <%= button_to "Approve", approve_lead_path(lead), class: "btn btn-xs btn-primary", form: { class: "inline" } %>
+          <% end %>
           <%= button_to "Done", done_lead_path(lead), class: "btn btn-xs", form: { class: "inline" } %>
           <%= button_to "Dismiss", dismiss_lead_path(lead), class: "btn btn-xs btn-ghost", form: { class: "inline" } %>
         </div>

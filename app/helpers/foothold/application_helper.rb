@@ -2,7 +2,8 @@ module Foothold
   module ApplicationHelper
     LEAD_VARIANTS = {
       "drop" => :error, "leaky_page" => :warning, "not_indexed" => :error, "term_gap" => :info, "page_two" => :success,
-      "title_mismatch" => :warning, "track_this" => :neutral, "new_referrer" => :primary, "mention" => :primary, "audit" => :warning
+      "title_mismatch" => :warning, "track_this" => :neutral, "new_referrer" => :primary, "mention" => :primary, "audit" => :warning,
+      "alternative_gap" => :info, "page_underperforming" => :warning
     }.freeze
 
     def lead_variant(lead)
@@ -63,6 +64,16 @@ module Foothold
         what: "The weekly technical audit found one or more open issues on this page (things like broken links, missing image text, or a title/description that's too short or too long).",
         why: "These are hygiene issues rather than content problems — they don't affect whether the page's writing is good, but they can quietly cap how well the page ranks or how accessible it is, even when the content itself is strong.",
         tip: "Open the page for the specific list of findings and work through them; most are quick, mechanical fixes rather than rewrites."
+      },
+      "alternative_gap" => {
+        what: "A rival ranks in the top positions for several terms you track, and there's no page on your site positioning you as an alternative to them.",
+        why: "People searching \"[rival] alternative\" or the rival's own ranking terms are already comparison-shopping — a page that meets them there is one of the highest-intent pages a product can have.",
+        tip: "Approve to open a GitHub issue with the rival's real ranking data; a draft PR follows for you to review before anything goes live."
+      },
+      "page_underperforming" => {
+        what: "A generated alternatives page has had its grace period and still has no real traffic, or has traffic but nobody who lands on it signs up.",
+        why: "A generated page that isn't earning its keep is exactly what turns programmatic SEO into low-quality spam if left alone — better to revise or remove it than let it sit.",
+        tip: "Check whether the page ever got indexed at all (a traffic problem) or reads poorly once someone's on it (a conversion problem), then revise the content or noindex it."
       }
     }.freeze
 
@@ -87,7 +98,7 @@ module Foothold
     # Payload fields not already surfaced elsewhere on the lead's detail page
     # (evidence, and whatever lead_where_links already turned into a link).
     def lead_detail_rows(lead)
-      lead.payload.except("evidence", "url", "domain", "landing_url", "rivals", "phrase")
+      lead.payload.except("evidence", "url", "domain", "landing_url", "rivals", "phrase", "terms")
     end
 
     SWEEP_STATUS_VARIANTS = { "ok" => :success, "failed" => :error, "running" => :warning }.freeze

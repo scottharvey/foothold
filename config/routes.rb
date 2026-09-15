@@ -11,6 +11,7 @@ Foothold::Engine.routes.draw do
       post :done
       post :dismiss
       post :track
+      post :approve
     end
     collection do
       post :bulk_done

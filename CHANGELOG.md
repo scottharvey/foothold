@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.6.0
+
+- Programmatic SEO pages, first template (alternatives pages): a new
+  `alternative_gap` Lead fires when a Rival ranks well for several tracked
+  Terms and there's no alternatives page pointing at us instead. Approving
+  it opens a GitHub issue (new `Foothold::GitHub` client, `FOOTHOLD_GITHUB_TOKEN`
+  / `FOOTHOLD_GITHUB_REPO`) carrying the Rival's real ranking data, for a
+  Claude Code GitHub Action to draft into a PR. A new `page_underperforming`
+  Lead watches generated (`kind: "alternative"`) Pages after a grace period
+  and flags ones with no traffic, or traffic with no signups — using the
+  Ahoy-derived `page_days.signups` the Visits sweep already collects, no new
+  data plumbing needed.
+- The GitHub issue Approve opens now carries house style rules for the
+  drafting Action (new `config.page_style_guidance`, defaults to "no em
+  dashes" and "no invented claims" — a host can override the list) and tells
+  it where to add screenshot placeholders (a new `screenshots` frontmatter
+  field on alternatives pages, rendered with the host's existing
+  `marketing_screenshot_placeholder`, same as `config/features.yml` already
+  does).
+
 ## 0.5.15
 
 - Fix: the lead show page's subtitle built its "opened X ago" `<time>` tag

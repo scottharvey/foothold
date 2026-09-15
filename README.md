@@ -48,6 +48,7 @@ Every source records a `SweepRun` with a watermark, the last date it fully colle
 | SERP and keyword data | `FOOTHOLD_DATAFORSEO_LOGIN` / `_PASSWORD` | tracked Term positions, volume, difficulty, rival ranking Terms |
 | Fetching the Site's own pages | `config.fetcher`, a plain `Net::HTTP` client by default | the weekly audit |
 | Mentions | `config.mention_feeds`, empty by default | Google Alerts, Hacker News, App Store reviews, Bluesky, Reddit, X |
+| Draft-page issues | `FOOTHOLD_GITHUB_TOKEN` / `FOOTHOLD_GITHUB_REPO` | opening a GitHub issue for a Claude Code Action to draft, when an `alternative_gap` Lead is approved |
 
 Screens render in a host layout (`hub` by default), inherit from the host's `ApplicationController` and use the host's `Ui::*` ViewComponents with Tailwind and DaisyUI class names.
 

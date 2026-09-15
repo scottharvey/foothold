@@ -68,6 +68,24 @@
     <% end %>
   <% end %>
 
+  <% if (terms = @lead.payload["terms"]).present? %>
+    <%= render Ui::CardComponent.new(body: false) do %>
+      <div class="text-xs uppercase tracking-wide opacity-60 px-4 pt-4">Terms this rival ranks for</div>
+      <%= render Ui::TableComponent.new(size: :sm) do %>
+        <thead><tr><th>Phrase</th><th class="text-right">Position</th><th class="text-right">Volume</th></tr></thead>
+        <tbody>
+          <% terms.each do |term| %>
+            <tr>
+              <td><%= term["phrase"] %></td>
+              <td class="text-right tabular-nums">#<%= term["position"] %></td>
+              <td class="text-right tabular-nums"><%= term["volume"] || "–" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      <% end %>
+    <% end %>
+  <% end %>
+
   <% details = lead_detail_rows(@lead) %>
   <% if details.any? %>
     <%= render Ui::CardComponent.new(body: false) do %>
@@ -88,6 +106,9 @@
     <% if @lead.open? %>
       <% if @lead.kind == "track_this" %>
         <%= button_to "Track", track_lead_path(@lead), class: "btn btn-sm btn-primary", form: { class: "inline" } %>
+      <% end %>
+      <% if @lead.kind == "alternative_gap" %>
+        <%= button_to "Approve", approve_lead_path(@lead), class: "btn btn-sm btn-primary", form: { class: "inline" } %>
       <% end %>
       <%= button_to "Done", done_lead_path(@lead), class: "btn btn-sm", form: { class: "inline" } %>
       <%= button_to "Dismiss", dismiss_lead_path(@lead), class: "btn btn-sm btn-ghost", form: { class: "inline" } %>

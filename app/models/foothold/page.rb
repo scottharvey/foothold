@@ -1,7 +1,7 @@
 module Foothold
   # One entry in the Site's own content inventory, keyed by path.
   class Page < ApplicationRecord
-    KINDS = %w[blog feature static discovered].freeze
+    KINDS = %w[blog feature static discovered alternative].freeze
 
     belongs_to :site
     has_many :page_days, dependent: :destroy

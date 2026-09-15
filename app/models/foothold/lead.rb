@@ -3,10 +3,10 @@ module Foothold
   # kind plus an identity, so the same suggestion is never raised twice.
   class Lead < ApplicationRecord
     # Priority order for the queue.
-    KINDS = %w[drop leaky_page not_indexed term_gap page_two title_mismatch track_this new_referrer mention audit].freeze
+    KINDS = %w[drop leaky_page not_indexed term_gap page_two title_mismatch track_this new_referrer mention audit alternative_gap page_underperforming].freeze
     # Kinds that describe a condition: the sweep closes them when it clears and
     # reopens them if it is still there a month after the operator resolved them.
-    STATE_KINDS = %w[term_gap page_two leaky_page title_mismatch track_this audit not_indexed].freeze
+    STATE_KINDS = %w[term_gap page_two leaky_page title_mismatch track_this audit not_indexed alternative_gap page_underperforming].freeze
     EVENT_KINDS = (KINDS - STATE_KINDS).freeze
     STATES = %w[open done dismissed].freeze
 

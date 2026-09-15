@@ -22,15 +22,19 @@ module Foothold
       page_two_range: 11..20,
       leaky_page_min_clicks: 20,
       not_indexed_after_days: 14,
-      lead_reopen_days: 30
+      lead_reopen_days: 30,
+      alternative_rival_position: 10,   # a rival must rank this well or better on a qualifying term
+      alternative_min_rival_terms: 3,   # ...for at least this many terms before it's worth a page
+      programmatic_page_grace_days: 42  # how long a generated page gets before its traffic/signups are judged
     }.freeze
 
     attr_accessor :mount_path, :parent_controller, :layout, :authenticate, :skip_host_before_actions,
                   :site_domain, :location_code, :language_code,
                   :pages, :visits, :signup_event_name, :search_engines,
-                  :search_console_client, :dataforseo_client, :fetcher,
+                  :search_console_client, :dataforseo_client, :fetcher, :github_client,
                   :thresholds, :digest_recipient, :parent_mailer,
                   :playbooks, :playbook_url, :rapport_new_contact_url, :mention_feeds,
+                  :page_style_guidance,
                   *HOST_CLASSES
     attr_writer :site_name, :search_console_property
 
@@ -60,6 +64,7 @@ module Foothold
       # API clients, built lazily so a missing key only disables that source.
       @search_console_client = -> { SearchConsole.from_env }
       @dataforseo_client = -> { DataForSeo.from_env }
+      @github_client = -> { GitHub.from_env }
       @fetcher = nil
 
       @thresholds = DEFAULT_THRESHOLDS.dup
@@ -71,6 +76,13 @@ module Foothold
       @playbook_url = nil
       @rapport_new_contact_url = nil
       @mention_feeds = []
+
+      # Handed to the GitHub Action as house style, one rule per line. A host
+      # can override this list entirely; these are just the defaults.
+      @page_style_guidance = [
+        "No em dashes (—). Use a period, comma, or parentheses instead.",
+        "No invented statistics, customer quotes, or capability claims — only what config/features.yml actually says."
+      ]
 
       # Runs in the controller. Redirects anyone who is not a signed-in admin.
       @authenticate = lambda do
