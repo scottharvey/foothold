@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.1
+
+- **The reset migration keeps Sites and Rivals.** `ResetFootholdData` still
+  truncates the sweep data (leads, terms, readings, pages, findings,
+  mentions, referrers, digests, sweep runs, rival terms) but no longer
+  wipes the site row or its rivals, so there is nothing to add back by
+  hand after migrating. Rivals are marked unchecked so the next weekly
+  sweep refreshes their terms. Installs that already ran 0.7.0's migration
+  are unaffected.
+
 ## 0.7.0
 
 The queue is now a short, ranked list of decisions, each with a verb. This
