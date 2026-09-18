@@ -22,5 +22,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "rails", ">= 8.0"
   spec.add_dependency "google-apis-searchconsole_v1", ">= 0.15"
   spec.add_dependency "nokogiri"
+  spec.add_dependency "anthropic", ">= 1.0"
   spec.add_dependency "pagy", ">= 43.0"
 end

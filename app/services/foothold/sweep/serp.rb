@@ -1,7 +1,10 @@
 module Foothold
   class Sweep
-    # A paid position check for every tracked Term, once a day.
+    # A paid position check for every tracked Term, once a day. Keeps the top
+    # ten of each SERP so a drop can say who moved in.
     class Serp < Base
+      SNAPSHOT = 10
+
       def call
         tracked("serp") do |run|
           client = config.dataforseo_client&.call
@@ -21,7 +24,8 @@ module Foothold
       def check(client, term)
         hits = client.serp(term.phrase, location_code: config.location_code, language_code: config.language_code, depth: threshold(:serp_depth))
         hit = hits.find { |candidate| Url.on_site?(candidate.url, site.domain) }
-        Reading.record!(term: term, date: today, source: "serp", position: hit&.rank_group, landing_url: hit && Url.path(hit.url))
+        top = hits.first(SNAPSHOT).map { |candidate| { position: candidate.rank_group, domain: candidate.domain, url: candidate.url, title: candidate.title } }
+        Reading.record!(term: term, date: today, source: "serp", position: hit&.rank_group, landing_url: hit && Url.path(hit.url), serp_top: top)
       end
     end
   end

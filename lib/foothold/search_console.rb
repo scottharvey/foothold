@@ -6,7 +6,7 @@ module Foothold
   # service account that has been added as a user on the property.
   class SearchConsole
     Row = Data.define(:query, :page, :clicks, :impressions, :position)
-    Inspection = Data.define(:verdict, :coverage_state, :last_crawl_time)
+    Inspection = Data.define(:verdict, :coverage_state, :robots_txt_state, :indexing_state, :page_fetch_state, :last_crawl_time)
 
     SCOPE = "https://www.googleapis.com/auth/webmasters.readonly".freeze
     ROW_LIMIT = 25_000
@@ -41,7 +41,8 @@ module Foothold
     def inspect_url(property, url)
       request = Google::Apis::SearchconsoleV1::InspectUrlIndexRequest.new(inspection_url: url, site_url: property)
       status = @service.inspect_url_index(request).inspection_result&.index_status_result
-      Inspection.new(verdict: status&.verdict, coverage_state: status&.coverage_state, last_crawl_time: status&.last_crawl_time)
+      Inspection.new(verdict: status&.verdict, coverage_state: status&.coverage_state, robots_txt_state: status&.robots_txt_state,
+                     indexing_state: status&.indexing_state, page_fetch_state: status&.page_fetch_state, last_crawl_time: status&.last_crawl_time)
     end
   end
 end

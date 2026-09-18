@@ -1,6 +1,9 @@
 module Foothold
   class Sweep
-    # The Terms each Rival ranks in the top twenty for, refreshed weekly.
+    # The phrases each Rival ranks in the top twenty for, refreshed weekly.
+    # Phrases stay on the rival row; a Term is only created when the
+    # operator tracks one. New phrases are then screened for relevance so
+    # dictionary lookups and the like never become leads.
     class RivalTerms < Base
       REFRESH_AFTER = 6.days
 
@@ -13,7 +16,8 @@ module Foothold
           next skip(run, "nothing due") if due.empty?
 
           due.each { |rival| refresh(client, rival) }
-          run.note(rivals: due.size, requests: client.requests, cost: client.cost.round(4))
+          classified = classify
+          run.note(rivals: due.size, requests: client.requests, cost: client.cost.round(4), classified: classified)
           run.watermark = today
         end
       end
@@ -24,13 +28,34 @@ module Foothold
         ranked = client.ranked_keywords(rival.domain, location_code: config.location_code, language_code: config.language_code,
                                                       limit: threshold(:rival_keyword_limit))
         now = Time.current
-        ranked.each do |row|
-          term = Term.locate(site, row.phrase, source: "rival", discovered_on: today) or next
-          term.update!(volume: row.volume) if term.volume.nil? && row.volume
-          rival.rival_terms.find_or_initialize_by(term_id: term.id)
+        seen = ranked.filter_map do |row|
+          phrase = row.phrase.to_s.squish.downcase
+          next if phrase.blank?
+
+          rival.rival_terms.find_or_initialize_by(phrase: phrase)
                .update!(position: row.rank_group, landing_url: row.url, volume: row.volume, checked_at: now)
+          phrase
         end
+        rival.rival_terms.where.not(phrase: seen).delete_all
         rival.update!(last_checked_at: now)
+      end
+
+      # Verdicts are cached per phrase; only new phrases cost a call.
+      def classify
+        relevance = config.relevance_client&.call
+        return 0 unless relevance
+
+        pending = RivalTerm.joins(:rival).where(foothold_rivals: { site_id: site.id }).unclassified.distinct.pluck(:phrase)
+        return 0 if pending.empty?
+
+        verdicts = relevance.classify(pending, site_name: config.site_name, description: config.site_description)
+        verdicts.each do |phrase, relevant|
+          RivalTerm.joins(:rival).where(foothold_rivals: { site_id: site.id }, phrase: phrase).update_all(relevant: relevant)
+        end
+        verdicts.size
+      rescue StandardError => e
+        Rails.logger.warn("[Foothold::Sweep::RivalTerms] relevance check failed: #{e.class}: #{e.message}")
+        0
       end
     end
   end

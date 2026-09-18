@@ -31,6 +31,13 @@ Findings
 <% end -%>
 
 <% end -%>
+<% if @digest.actioned.any? -%>
+What your actions did
+<% @digest.actioned.each do |lead| -%>
+  <%= lead["summary"] %>: <%= outcome_text(lead["outcome"]) %>
+<% end -%>
+
+<% end -%>
 Top leads
 <% if @digest.top_leads.any? -%>
 <% @digest.top_leads.each do |lead| -%>

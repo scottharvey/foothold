@@ -60,6 +60,17 @@
       </tr>
     <% end %>
 
+    <% if @digest.actioned.any? %>
+      <tr>
+        <td style="padding-bottom:20px;font-size:15px;line-height:1.6;">
+          <strong>What your actions did</strong>
+          <% @digest.actioned.each do |lead| %>
+            <p style="margin:8px 0 0;"><%= lead["summary"] %><br><span style="color:#666;"><%= outcome_text(lead["outcome"]) %></span></p>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+
     <tr>
       <td style="font-size:15px;line-height:1.6;">
         <strong>Top leads</strong>

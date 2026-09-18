@@ -1,5 +1,56 @@
 # Changelog
 
+## 0.7.0
+
+The queue is now a short, ranked list of decisions, each with a verb. This
+release ships a migration that **wipes every Foothold table** (leads, terms,
+readings, pages, rivals, mentions, sweep runs, the site row) so an install
+starts clean; add your rivals back after migrating and run a sweep.
+
+- **Term gaps are clustered.** One lead per rival and site section (first
+  path segment) instead of one per phrase. "clozemaster.com ranks top 10 for
+  1,840 terms under /vocabulary that you don't rank for" is one row with the
+  terms and winning pages on its detail page. Phrases below
+  `term_gap_min_volume` (default 50) are ignored.
+- **Every lead has a score**, estimated monthly search visits at stake, in
+  the same unit across kinds. The Queue sorts by it and shows `queue_size`
+  (default 20) leads; the rest wait behind them. The digest's top leads use
+  the same order.
+- **Dismiss is permanent.** A dismissed condition never reopens. Done
+  reopens after `lead_reopen_days` if the condition persists; a condition
+  the sweep itself closed comes straight back when it recurs. **Snooze**
+  hides a lead for `snooze_days` (default 28).
+- **Mutes.** Mute a term, a query pattern (`phrase:* in english`), a page,
+  a rival section or a domain from the lead's page or the new Mutes screen.
+  Builders skip anything muted; muting closes every open lead it covers.
+- **Relevance check on rival phrases.** With `FOOTHOLD_ANTHROPIC_API_KEY`
+  set, new rival phrases are classified once (cached on the row) as ones a
+  prospective customer would type or not. Dictionary lookups stop becoming
+  leads. Set `config.site_description` so the classifier knows what the
+  product is. Model defaults to `claude-opus-5`; `FOOTHOLD_RELEVANCE_MODEL`
+  overrides it.
+- **Rival phrases no longer become Terms.** `RivalTerm` carries the phrase
+  itself; a Term is created only when the operator tracks one. The Terms
+  page is your terms again.
+- **Every kind has a verb.** Issue verbs (Propose page, Refresh page,
+  Revise page, Fix, Propose title, Retire page, Approve) open a GitHub issue
+  carrying the lead's evidence for the Claude Code Action. Track, Ignore
+  term, Snooze and Mute are done by Foothold. Visit, Reply, Save contact
+  (`config.rapport_new_contact_url`) and Inspect in Search Console link out.
+  Copy link request puts a polite ask-for-a-link on the clipboard.
+- **Builders capture the evidence the verb needs.** The Serp sweep keeps the
+  top ten of each SERP (`readings.serp_top`), so a drop says who moved in and
+  a page-two lead shows what beats you. Leaky and underperforming pages carry
+  the queries that landed there. Not-indexed leads carry the inspection
+  reason (`pages.index_detail`) and offer Fix when the block is ours.
+- **Outcomes.** A lead resolved by the operator is measured
+  `outcome_window_days` (default 28) later: average position before and
+  after for a term, search visits and signups for a page. Shown on the lead
+  and in a new digest section, "What your actions did".
+- New dependency: `anthropic`. New thresholds: `snooze_days`, `queue_size`,
+  `outcome_window_days`, `term_gap_min_volume`, `term_gap_track_limit`.
+- Removed routes: `track` and `approve` on leads are now `act` with a verb.
+
 ## 0.6.4
 
 - The `alternative_gap` GitHub issue prompt now pushes drafters toward an

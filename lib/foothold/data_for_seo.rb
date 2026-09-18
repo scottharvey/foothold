@@ -6,7 +6,7 @@ module Foothold
   # its cost so the Sweep can show what a run spent.
   class DataForSeo
     Error = Class.new(StandardError)
-    Hit = Data.define(:rank_group, :url, :domain)
+    Hit = Data.define(:rank_group, :url, :domain, :title)
     Ranked = Data.define(:phrase, :volume, :rank_group, :url)
 
     ENDPOINT = "https://api.dataforseo.com/v3/".freeze
@@ -38,7 +38,7 @@ module Foothold
       result = post("serp/google/organic/live/regular",
                     [ { keyword: phrase, location_code:, language_code:, device: "desktop", depth: } ]).first
       Array(result&.dig("items")).select { |item| item["type"] == "organic" }.map do |item|
-        Hit.new(rank_group: item["rank_group"], url: item["url"], domain: item["domain"])
+        Hit.new(rank_group: item["rank_group"], url: item["url"], domain: item["domain"], title: item["title"])
       end
     end
 

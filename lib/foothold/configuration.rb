@@ -22,16 +22,21 @@ module Foothold
       page_two_range: 11..20,
       leaky_page_min_clicks: 20,
       not_indexed_after_days: 14,
-      lead_reopen_days: 30,
+      lead_reopen_days: 30,             # a lead the operator marked done comes back after this if the condition persists
+      snooze_days: 28,
+      queue_size: 20,                   # open leads shown on the Queue; the rest wait, ranked by score
+      outcome_window_days: 28,          # days after a lead is resolved before its effect is measured
+      term_gap_min_volume: 50,          # rival phrases below this monthly volume never become term gaps
+      term_gap_track_limit: 10,         # phrases "Track" starts tracking from a term gap cluster
       alternative_rival_position: 10,   # a rival must rank this well or better on a qualifying term
       alternative_min_rival_terms: 3,   # ...for at least this many terms before it's worth a page
       programmatic_page_grace_days: 42  # how long a generated page gets before its traffic/signups are judged
     }.freeze
 
     attr_accessor :mount_path, :parent_controller, :layout, :authenticate, :skip_host_before_actions,
-                  :site_domain, :location_code, :language_code,
+                  :site_domain, :site_description, :location_code, :language_code,
                   :pages, :visits, :signup_event_name, :search_engines,
-                  :search_console_client, :dataforseo_client, :fetcher, :github_client,
+                  :search_console_client, :dataforseo_client, :fetcher, :github_client, :relevance_client,
                   :thresholds, :digest_recipient, :parent_mailer,
                   :playbooks, :playbook_url, :rapport_new_contact_url, :mention_feeds,
                   :page_style_guidance,
@@ -47,6 +52,8 @@ module Foothold
       # The one Site this install watches.
       @site_domain = ENV["APP_HOST"].presence
       @site_name = nil
+      # One line on what the product is, for the relevance check on rival phrases.
+      @site_description = nil
       @search_console_property = nil
       @location_code = 2840 # United States
       @language_code = "en"
@@ -65,6 +72,8 @@ module Foothold
       @search_console_client = -> { SearchConsole.from_env }
       @dataforseo_client = -> { DataForSeo.from_env }
       @github_client = -> { GitHub.from_env }
+      # Anything responding to classify(phrases, site_name:, description:).
+      @relevance_client = -> { Relevance.from_env }
       @fetcher = nil
 
       @thresholds = DEFAULT_THRESHOLDS.dup
@@ -74,6 +83,7 @@ module Foothold
       @parent_mailer = "::ApplicationMailer"
       @playbooks = {}
       @playbook_url = nil
+      # ->(label:, url:) { main_app.rapport.new_contact_path(...) }, run in the view.
       @rapport_new_contact_url = nil
       @mention_feeds = []
 

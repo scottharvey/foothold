@@ -47,7 +47,7 @@
 
 <section class="mt-10">
   <%= render Ui::CardComponent.new do %>
-    <%= render Ui::IndexHeaderComponent.new(title: "Digest", subtitle: @last_digest ? "Last sent #{time_ago_in_words(@last_digest.sent_at)} ago, for the week of #{@last_digest.week_starting.strftime('%-d %b %Y')}" : "Never sent") do |header| %>
+    <%= render Ui::IndexHeaderComponent.new(title: "Digest", subtitle: @last_digest&.sent_at ? "Last sent #{time_ago_in_words(@last_digest.sent_at)} ago, for the week of #{@last_digest.week_starting.strftime('%-d %b %Y')}" : "Never sent") do |header| %>
       <% header.with_primary_action do %>
         <%= button_to "Send digest now", digest_path, method: :post, class: "btn btn-sm", form: { class: "inline" } %>
       <% end %>

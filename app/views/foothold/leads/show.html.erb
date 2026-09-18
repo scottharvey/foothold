@@ -2,6 +2,8 @@
 <%= render "foothold/shared/header" %>
 
 <% subtitle = safe_join([@lead.kind.humanize, "· opened", foothold_ago(@lead.opened_at)], " ") %>
+<% subtitle = safe_join([subtitle, "· #{score_text(@lead.score)}"], " ") if @lead.score.positive? %>
+<% subtitle = safe_join([subtitle, "· snoozed until #{@lead.snoozed_until.to_date.strftime('%-d %b')}"], " ") if @lead.snoozed? %>
 <% subtitle = safe_join([subtitle, "· #{@lead.state}, by #{@lead.resolved_by}"], " ") unless @lead.open? %>
 <%= render Ui::IndexHeaderComponent.new(title: @lead.summary, subtitle: subtitle) do |header| %>
   <% header.with_meta do %>
@@ -12,7 +14,70 @@
   <% end %>
 <% end %>
 
+<% payload = @lead.payload %>
+<% actions = lead_actions(@lead) %>
+
 <div class="flex flex-col gap-6">
+  <% if @lead.open? %>
+    <%= render Ui::CardComponent.new do %>
+      <div class="text-xs uppercase tracking-wide opacity-60 mb-3">Do</div>
+      <div class="flex flex-col gap-3">
+        <% actions.each do |action| %>
+          <% if action[:input] == :title %>
+            <%= form_with url: act_lead_path(@lead, verb: action[:verb]), method: :post, class: "flex flex-wrap items-end gap-2" do |f| %>
+              <fieldset class="fieldset grow">
+                <label class="label" for="lead_title">Proposed title (<%= payload["proposed_title"].to_s.length %> characters)</label>
+                <%= f.text_field :title, id: "lead_title", value: payload["proposed_title"], maxlength: 70, class: "input input-sm w-full", **plain_field %>
+              </fieldset>
+              <%= f.submit action[:label], class: "btn btn-sm #{action[:primary] ? 'btn-primary' : ''}" %>
+            <% end %>
+          <% elsif action[:type] == :copy %>
+            <div class="flex flex-col gap-1">
+              <textarea id="link-request" class="textarea textarea-sm w-full" rows="3" readonly><%= payload["link_request"] %></textarea>
+              <div>
+                <button type="button" id="copy-link-request" class="btn btn-sm <%= 'btn-primary' if action[:primary] %>"><%= action[:label] %></button>
+              </div>
+            </div>
+            <script nonce="<%= content_security_policy_nonce %>">
+              document.getElementById("copy-link-request").addEventListener("click", function () {
+                var text = document.getElementById("link-request").value;
+                navigator.clipboard.writeText(text).then(function () { document.getElementById("copy-link-request").textContent = "Copied"; });
+              });
+            </script>
+          <% elsif action[:type] == :link %>
+            <div><%= link_to action[:label], action[:url], class: "btn btn-sm #{action[:primary] ? 'btn-primary' : ''}", target: "_blank", rel: "noopener" %></div>
+          <% else %>
+            <div><%= button_to action[:label], act_lead_path(@lead, verb: action[:verb]), class: "btn btn-sm #{action[:primary] ? 'btn-primary' : ''}", form: { class: "inline" } %></div>
+          <% end %>
+        <% end %>
+        <% if actions.any? { |action| action[:type] == :issue } %>
+          <p class="text-xs opacity-60">Issue verbs open a GitHub issue carrying this evidence for the Claude Code Action, which opens a PR for you to review.</p>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+
+  <% if !@lead.open? || @lead.action.present? %>
+    <%= render Ui::CardComponent.new do %>
+      <div class="text-xs uppercase tracking-wide opacity-60 mb-2">What happened</div>
+      <p class="text-sm">
+        <% if @lead.action.present? %>
+          <%= Foothold::Leads::Actions::VERBS.dig(@lead.action.to_sym, :label) || @lead.action.humanize %>
+          <% if @lead.action_url.present? %> · <%= link_to @lead.action_url, @lead.action_url, class: "link link-hover font-mono text-xs", target: "_blank", rel: "noopener" %><% end %>
+          <% if @lead.acted_at %> · <%= foothold_ago(@lead.acted_at) %><% end %>
+        <% else %>
+          Marked <%= @lead.state %> by <%= @lead.resolved_by %><% if @lead.resolved_at %> <%= foothold_ago(@lead.resolved_at) %><% end %>
+        <% end %>
+      </p>
+      <% if @lead.action_note.present? && @lead.action_note != @lead.action_url %><p class="text-sm opacity-80 mt-1"><%= @lead.action_note %></p><% end %>
+      <% if (text = outcome_text(@lead.outcome)) %>
+        <p class="text-sm mt-2"><span class="font-medium">Outcome:</span> <%= text %></p>
+      <% elsif @lead.state == "done" && @lead.resolved_by == "operator" && (@lead.term_id || @lead.page_id) %>
+        <p class="text-xs opacity-60 mt-2">Outcome is measured <%= Foothold.threshold(:outcome_window_days) %> days after resolution.</p>
+      <% end %>
+    <% end %>
+  <% end %>
+
   <% if (explanation = lead_explanation(@lead)) %>
     <%= render Ui::CardComponent.new do %>
       <div class="text-xs uppercase tracking-wide opacity-60 mb-2">What this means</div>
@@ -46,21 +111,21 @@
     <% end %>
   <% end %>
 
-  <% if (rivals = @lead.payload["rivals"]).present? %>
+  <% if (terms = payload["terms"]).present? %>
     <%= render Ui::CardComponent.new(body: false) do %>
-      <div class="text-xs uppercase tracking-wide opacity-60 px-4 pt-4">Ranking rivals</div>
+      <div class="text-xs uppercase tracking-wide opacity-60 px-4 pt-4">
+        <%= @lead.kind == "term_gap" ? "Terms #{payload['rival']} wins under #{payload['path']}" : "Terms this rival ranks for" %>
+        <% if payload["count"].to_i > terms.size %> · showing <%= terms.size %> of <%= payload["count"] %><% end %>
+      </div>
       <%= render Ui::TableComponent.new(size: :sm) do %>
-        <thead><tr><th>Domain</th><th class="text-right">Position</th><th>Landing page</th></tr></thead>
+        <thead><tr><th>Phrase</th><th class="text-right">Position</th><th class="text-right">Volume</th><% if terms.first["url"] %><th>Rival page</th><% end %></tr></thead>
         <tbody>
-          <% rivals.each do |rival| %>
+          <% terms.each do |term| %>
             <tr>
-              <td><%= rival["domain"] %></td>
-              <td class="text-right tabular-nums">#<%= rival["position"] %></td>
-              <td class="font-mono text-xs">
-                <% if rival["url"].present? %>
-                  <%= link_to rival["url"], rival["url"], target: "_blank", rel: "noopener", class: "link link-hover" %>
-                <% end %>
-              </td>
+              <td><%= term["phrase"] %></td>
+              <td class="text-right tabular-nums">#<%= term["position"] %></td>
+              <td class="text-right tabular-nums"><%= term["volume"] || "–" %></td>
+              <% if terms.first["url"] %><td class="font-mono text-xs"><% if term["url"].present? %><%= link_to term["url"].sub(%r{\Ahttps?://[^/]+}, ""), term["url"], target: "_blank", rel: "noopener", class: "link link-hover" %><% end %></td><% end %>
             </tr>
           <% end %>
         </tbody>
@@ -68,18 +133,73 @@
     <% end %>
   <% end %>
 
-  <% if (terms = @lead.payload["terms"]).present? %>
+  <% if (urls = payload["urls"]).present? %>
     <%= render Ui::CardComponent.new(body: false) do %>
-      <div class="text-xs uppercase tracking-wide opacity-60 px-4 pt-4">Terms this rival ranks for</div>
+      <div class="text-xs uppercase tracking-wide opacity-60 px-4 pt-4">Rival pages that win them</div>
       <%= render Ui::TableComponent.new(size: :sm) do %>
-        <thead><tr><th>Phrase</th><th class="text-right">Position</th><th class="text-right">Volume</th></tr></thead>
+        <thead><tr><th>Page</th><th class="text-right">Terms</th></tr></thead>
         <tbody>
-          <% terms.each do |term| %>
+          <% urls.each do |entry| %>
+            <tr><td class="font-mono text-xs"><%= link_to entry["url"], entry["url"], target: "_blank", rel: "noopener", class: "link link-hover" %></td><td class="text-right tabular-nums"><%= entry["count"] %></td></tr>
+          <% end %>
+        </tbody>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <% serp = payload["rivals_above"].presence || payload["top_results"].presence || payload["rivals"].presence %>
+  <% if serp %>
+    <%= render Ui::CardComponent.new(body: false) do %>
+      <div class="text-xs uppercase tracking-wide opacity-60 px-4 pt-4"><%= payload["rivals_above"].present? ? "Ranking above you now" : "Top of the SERP" %></div>
+      <%= render Ui::TableComponent.new(size: :sm) do %>
+        <thead><tr><th class="text-right">Position</th><th>Domain</th><th>Page</th></tr></thead>
+        <tbody>
+          <% serp.each do |hit| %>
             <tr>
-              <td><%= term["phrase"] %></td>
-              <td class="text-right tabular-nums">#<%= term["position"] %></td>
-              <td class="text-right tabular-nums"><%= term["volume"] || "–" %></td>
+              <td class="text-right tabular-nums">#<%= hit["position"] %></td>
+              <td><%= hit["domain"] %></td>
+              <td class="font-mono text-xs"><% if hit["url"].present? %><%= link_to hit["title"].presence || hit["url"], hit["url"], target: "_blank", rel: "noopener", class: "link link-hover" %><% end %></td>
             </tr>
+          <% end %>
+        </tbody>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <% if (queries = payload["queries"]).present? %>
+    <%= render Ui::CardComponent.new(body: false) do %>
+      <div class="text-xs uppercase tracking-wide opacity-60 px-4 pt-4">What people searched to land here</div>
+      <%= render Ui::TableComponent.new(size: :sm) do %>
+        <thead><tr><th>Query</th><th class="text-right">Position</th><th class="text-right">Impressions</th><th class="text-right">Clicks</th></tr></thead>
+        <tbody>
+          <% queries.each do |query| %>
+            <tr><td><%= query["phrase"] %></td><td class="text-right tabular-nums"><%= query["position"] %></td><td class="text-right tabular-nums"><%= query["impressions"] %></td><td class="text-right tabular-nums"><%= query["clicks"] %></td></tr>
+          <% end %>
+        </tbody>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <% if (findings = payload["findings"]).present? %>
+    <%= render Ui::CardComponent.new(body: false) do %>
+      <div class="text-xs uppercase tracking-wide opacity-60 px-4 pt-4">Findings</div>
+      <%= render Ui::TableComponent.new(size: :sm) do %>
+        <tbody>
+          <% findings.each do |finding| %>
+            <tr><td class="font-medium w-1/3"><%= finding["check"].to_s.humanize %></td><td><%= finding["detail"] %></td></tr>
+          <% end %>
+        </tbody>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <% if (detail = payload["detail"]).present? %>
+    <%= render Ui::CardComponent.new(body: false) do %>
+      <div class="text-xs uppercase tracking-wide opacity-60 px-4 pt-4">Index inspection</div>
+      <%= render Ui::TableComponent.new(size: :sm) do %>
+        <tbody>
+          <% detail.each do |key, value| %>
+            <tr><td class="font-medium w-1/3"><%= key.humanize %></td><td><%= value %></td></tr>
           <% end %>
         </tbody>
       <% end %>
@@ -99,19 +219,32 @@
     <% end %>
   <% end %>
 
-  <div class="flex items-center gap-2">
-    <% if (url = playbook_url(@lead)) %>
-      <%= link_to "Playbook", url, class: "btn btn-sm btn-ghost" %>
+  <% if @lead.open? %>
+    <%= render Ui::CardComponent.new do %>
+      <div class="text-xs uppercase tracking-wide opacity-60 mb-3">Or</div>
+      <div class="flex flex-col gap-3">
+        <%= form_with url: done_lead_path(@lead), method: :post, class: "flex flex-wrap items-end gap-2" do |f| %>
+          <fieldset class="fieldset grow">
+            <label class="label" for="lead_note">Done by hand. What did you do?</label>
+            <%= f.text_field :note, id: "lead_note", placeholder: "optional", class: "input input-sm w-full", **plain_field %>
+          </fieldset>
+          <%= f.submit "Done", class: "btn btn-sm" %>
+        <% end %>
+        <div class="flex flex-wrap items-center gap-2">
+          <% if (url = playbook_url(@lead)) %><%= link_to "Playbook", url, class: "btn btn-sm btn-ghost" %><% end %>
+          <%= button_to "Snooze #{Foothold.threshold(:snooze_days)} days", snooze_lead_path(@lead), class: "btn btn-sm btn-ghost", form: { class: "inline" } %>
+          <%= button_to "Dismiss", dismiss_lead_path(@lead), class: "btn btn-sm btn-ghost", form: { class: "inline", data: { turbo_confirm: "Dismiss for good? It won't come back." } } %>
+        </div>
+        <% if (options = @lead.mute_options).any? %>
+          <%= form_with url: mute_lead_path(@lead), method: :post, class: "flex flex-wrap items-end gap-2" do |f| %>
+            <fieldset class="fieldset grow">
+              <label class="label" for="lead_mute_key">Mute, so nothing like this comes back</label>
+              <%= f.select :key, options_for_select(options.map { |option| [ option[:label], option[:key] ] }), {}, id: "lead_mute_key", class: "select select-sm w-full" %>
+            </fieldset>
+            <%= f.submit "Mute", class: "btn btn-sm btn-ghost" %>
+          <% end %>
+        <% end %>
+      </div>
     <% end %>
-    <% if @lead.open? %>
-      <% if @lead.kind == "track_this" %>
-        <%= button_to "Track", track_lead_path(@lead), class: "btn btn-sm btn-primary", form: { class: "inline" } %>
-      <% end %>
-      <% if @lead.kind == "alternative_gap" %>
-        <%= button_to "Approve", approve_lead_path(@lead), class: "btn btn-sm btn-primary", form: { class: "inline" } %>
-      <% end %>
-      <%= button_to "Done", done_lead_path(@lead), class: "btn btn-sm", form: { class: "inline" } %>
-      <%= button_to "Dismiss", dismiss_lead_path(@lead), class: "btn btn-sm btn-ghost", form: { class: "inline" } %>
-    <% end %>
-  </div>
+  <% end %>
 </div>

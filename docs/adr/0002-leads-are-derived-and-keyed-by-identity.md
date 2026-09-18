@@ -2,7 +2,7 @@
 
 A Lead is a suggested action. Foothold never asks the operator to create one; a set of builders runs after every Sweep and each reports the leads the data supports right now. Every lead carries a digest of its kind and an identity (a term, a page, a domain, a week) so the same suggestion is raised once, refreshed while it stays open, and never duplicated.
 
-Kinds come in two families. State kinds describe a condition (a term gap, a page on page two, a leaky page): the sweep closes them when the condition clears and reopens them if it is still there a month after the operator marked them done or dismissed. Event kinds describe something that happened (a position drop, a new referrer, a mention): their identity includes the event, so they stay resolved once resolved.
+Kinds come in two families. State kinds describe a condition (a term gap, a page on page two, a leaky page): the sweep closes them when the condition clears and reopens them the moment it recurs; a condition the operator marked done reopens after a month if it persists; a dismissed one never reopens. Event kinds describe something that happened (a position drop, a new referrer, a mention): their identity includes the event, so they stay resolved once resolved.
 
 ## Considered options
 

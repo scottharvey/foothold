@@ -1,5 +1,7 @@
 module Foothold
   class DigestMailer < Foothold.configuration.parent_mailer.to_s.presence&.safe_constantize.then { |klass| klass || ActionMailer::Base }
+    helper Foothold::ApplicationHelper
+
     def weekly(digest)
       @digest = digest
       counts = digest.counts

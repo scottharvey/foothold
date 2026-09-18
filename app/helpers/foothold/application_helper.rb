@@ -31,9 +31,9 @@ module Foothold
         tip: "Check Google Search Console for the specific reason (a noindex tag, a robots.txt block, being flagged as duplicate/thin content, or simply not yet crawled). Once the cause is fixed, you can request indexing directly from Search Console rather than waiting."
       },
       "term_gap" => {
-        what: "A competitor ranks in the top 10 for a search term that you don't rank for at all (outside the top 30).",
-        why: "This is one of the clearest signals in SEO: if a rival can rank for it, the term is provably winnable, and you're leaving that traffic on the table with no page competing for it.",
-        tip: "Look at what the top-ranking page actually covers, then decide whether an existing page of yours could be expanded to target the term, or whether it deserves a new page of its own."
+        what: "A competitor ranks in the top 10 for a group of search terms, all under one section of their site, that you don't rank for at all (outside the top 30).",
+        why: "If a rival can rank for these, they're provably winnable, and a whole section of them usually means the rival built something deliberate: a page template, a guide series, a comparison hub. That's one decision for you, not one per term.",
+        tip: "Open the detail to see the terms and the rival pages that win them. Propose a page to have a draft made, Track to start watching the biggest terms, or mute the section if these aren't searches your customers make."
       },
       "page_two" => {
         what: "A term is averaging a position just outside page one (roughly 11th-20th) with enough search volume to matter.",
@@ -81,6 +81,51 @@ module Foothold
       LEAD_EXPLANATIONS[lead.kind]
     end
 
+    # The lead's verbs with a URL for each link verb. Link verbs whose URL
+    # the host hasn't configured are left out.
+    def lead_actions(lead)
+      lead.actions.filter_map do |action|
+        next action.to_h.merge(url: nil) unless action.link?
+
+        url = lead_link_url(lead, action.verb) or next
+        action.to_h.merge(url: url)
+      end
+    end
+
+    def lead_link_url(lead, verb)
+      payload = lead.payload
+      case verb
+      when :inspect then payload["inspect_url"]
+      when :visit, :reply then payload["url"]
+      when :contact then rapport_url(lead)
+      end
+    end
+
+    def rapport_url(lead)
+      builder = Foothold.configuration.rapport_new_contact_url or return nil
+      payload = lead.payload
+      label = payload["author"].presence || payload["domain"].presence || payload["url"]
+      instance_exec(label: label, url: payload["url"], &builder)
+    end
+
+    # "~120 visits/mo": the score in words.
+    def score_text(score)
+      return "" if score.to_f <= 0
+
+      "~#{number_with_delimiter(score.round)} visits/mo"
+    end
+
+    def outcome_text(outcome)
+      return nil if outcome.blank?
+
+      if outcome["metric"] == "position"
+        better = outcome["delta"].to_f.negative?
+        "Position #{outcome['before']} → #{outcome['after']} #{better ? '(better)' : outcome['delta'].to_f.zero? ? '(unchanged)' : '(worse)'} over #{outcome['days']} days"
+      else
+        "Search visits #{outcome['before']} → #{outcome['after']}, signups #{outcome['signups_before']} → #{outcome['signups_after']} over #{outcome['days']} days"
+      end
+    end
+
     # Where a lead points: Foothold's own Page/Term screens, plus whatever
     # external URL its payload carries (a mention's actual post, a page-two
     # landing URL not yet in the page index, or a new referrer's own site).
@@ -98,7 +143,9 @@ module Foothold
     # Payload fields not already surfaced elsewhere on the lead's detail page
     # (evidence, and whatever lead_where_links already turned into a link).
     def lead_detail_rows(lead)
-      lead.payload.except("evidence", "url", "domain", "landing_url", "rivals", "phrase", "terms")
+      lead.payload.except("evidence", "url", "domain", "landing_url", "rivals", "phrase", "terms", "urls", "queries", "findings",
+                          "top_results", "rivals_above", "detail", "mute_keys", "inspect_url", "link_request", "fixable", "tracked",
+                          "proposed_title", "path", "rival")
     end
 
     SWEEP_STATUS_VARIANTS = { "ok" => :success, "failed" => :error, "running" => :warning }.freeze

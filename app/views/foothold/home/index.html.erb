@@ -1,13 +1,18 @@
 <% content_for :title, "Foothold" %>
 <%= render "foothold/shared/header" %>
 
-<%= render Ui::IndexHeaderComponent.new(title: "Queue", subtitle: "#{@pagy.count} open #{'lead'.pluralize(@pagy.count)}") do |header| %>
+<% total = params[:all].present? ? @pagy.count : @leads.size + @waiting.to_i %>
+<%= render Ui::IndexHeaderComponent.new(title: "Queue", subtitle: "#{total} open #{'lead'.pluralize(total)}, best first") do |header| %>
   <% header.with_meta do %>
-    <% if @last_sweep %>
-      <span class="text-xs opacity-60">Last nightly sweep <%= foothold_ago(@last_sweep.started_at) %><%= ", #{@last_sweep.status}" unless @last_sweep.status == "ok" %></span>
-    <% else %>
-      <span class="text-xs opacity-60">No sweep has run yet.</span>
-    <% end %>
+    <span class="text-xs opacity-60">
+      <% if @last_sweep %>
+        Last nightly sweep <%= foothold_ago(@last_sweep.started_at) %><%= ", #{@last_sweep.status}" unless @last_sweep.status == "ok" %>
+      <% else %>
+        No sweep has run yet.
+      <% end %>
+      <% if @snoozed.positive? %> · <%= @snoozed %> snoozed<% end %>
+      <% if @muted.positive? %> · <%= link_to "#{@muted} muted", mutes_path, class: "link link-hover" %><% end %>
+    </span>
   <% end %>
   <% if @kinds.size > 1 || params[:kind].present? %>
     <% header.with_utility_action do %>
@@ -23,8 +28,8 @@
   <%= render Ui::EmptyStateComponent.new(title: "Queue is empty", description: "Leads appear after a sweep finds something worth doing.") %>
 <% else %>
   <%# Row checkboxes live in the list below and join this form via the HTML5
-      `form` attribute, since each row's own Done/Dismiss/Track button is its
-      own <form> (button_to) and forms can't nest. %>
+      `form` attribute, since each row's own buttons are their own <form>s
+      (button_to) and forms can't nest. %>
   <%= form_with url: bulk_done_leads_path, method: :post, id: "queue-bulk-form" do %>
     <div class="flex items-center justify-between mb-2">
       <label class="flex items-center gap-2 pl-4 text-xs opacity-60 cursor-pointer">
@@ -46,6 +51,8 @@
 
   <ul class="list rounded-box bg-base-100 shadow-sm">
     <% @leads.each do |lead| %>
+      <% actions = lead_actions(lead) %>
+      <% primary = actions.first %>
       <li class="list-row items-center" id="<%= dom_id(lead) %>">
         <input type="checkbox" name="lead_ids[]" value="<%= lead.id %>" form="queue-bulk-form" class="checkbox checkbox-sm lead-checkbox" aria-label="Select lead">
         <div><%= render Ui::BadgeComponent.new(variant: lead_variant(lead), soft: true, size: :sm, text: lead.kind.humanize) %></div>
@@ -53,23 +60,54 @@
           <div class="font-medium">
             <%= link_to lead.summary, lead_path(lead), class: "link link-hover" %>
           </div>
-          <div class="text-xs opacity-60"><%= lead.evidence %><%= " · " if lead.evidence.present? %>opened <%= foothold_ago(lead.opened_at) %></div>
+          <div class="text-xs opacity-60">
+            <% if lead.score.positive? %><span class="font-medium"><%= score_text(lead.score) %></span> · <% end %><%= lead.evidence %><%= " · " if lead.evidence.present? %>opened <%= foothold_ago(lead.opened_at) %>
+          </div>
         </div>
         <div class="flex items-center gap-1">
-          <% if (url = playbook_url(lead)) %>
-            <%= link_to "Playbook", url, class: "btn btn-xs btn-ghost" %>
+          <% if primary %>
+            <% if primary[:type] == :link %>
+              <%= link_to primary[:label], primary[:url], class: "btn btn-xs btn-primary", target: "_blank", rel: "noopener" %>
+            <% elsif primary[:type] == :copy %>
+              <%= link_to primary[:label], lead_path(lead), class: "btn btn-xs btn-primary" %>
+            <% elsif primary[:input] %>
+              <%= link_to primary[:label], lead_path(lead), class: "btn btn-xs btn-primary" %>
+            <% else %>
+              <%= button_to primary[:label], act_lead_path(lead, verb: primary[:verb]), class: "btn btn-xs btn-primary", form: { class: "inline" } %>
+            <% end %>
           <% end %>
-          <% if lead.kind == "track_this" %>
-            <%= button_to "Track", track_lead_path(lead), class: "btn btn-xs btn-primary", form: { class: "inline" } %>
-          <% end %>
-          <% if lead.kind == "alternative_gap" %>
-            <%= button_to "Approve", approve_lead_path(lead), class: "btn btn-xs btn-primary", form: { class: "inline" } %>
-          <% end %>
-          <%= button_to "Done", done_lead_path(lead), class: "btn btn-xs", form: { class: "inline" } %>
-          <%= button_to "Dismiss", dismiss_lead_path(lead), class: "btn btn-xs btn-ghost", form: { class: "inline" } %>
+          <div class="dropdown dropdown-end">
+            <div tabindex="0" role="button" class="btn btn-xs btn-ghost" aria-label="More actions">⋯</div>
+            <ul tabindex="0" class="dropdown-content menu menu-sm bg-base-100 rounded-box z-10 w-52 p-2 shadow">
+              <% actions.drop(1).each do |action| %>
+                <li>
+                  <% if action[:type] == :link %>
+                    <%= link_to action[:label], action[:url], target: "_blank", rel: "noopener" %>
+                  <% elsif action[:type] == :copy || action[:input] %>
+                    <%= link_to action[:label], lead_path(lead) %>
+                  <% else %>
+                    <%= button_to action[:label], act_lead_path(lead, verb: action[:verb]), class: "w-full text-left", form: { class: "contents" } %>
+                  <% end %>
+                </li>
+              <% end %>
+              <% if (url = playbook_url(lead)) %><li><%= link_to "Playbook", url %></li><% end %>
+              <li><%= button_to "Done", done_lead_path(lead), class: "w-full text-left", form: { class: "contents" } %></li>
+              <li><%= button_to "Snooze #{Foothold.threshold(:snooze_days)} days", snooze_lead_path(lead), class: "w-full text-left", form: { class: "contents" } %></li>
+              <% if lead.mute_options.any? %><li><%= link_to "Mute…", lead_path(lead) %></li><% end %>
+              <li><%= button_to "Dismiss", dismiss_lead_path(lead), class: "w-full text-left text-error", form: { class: "contents" } %></li>
+            </ul>
+          </div>
         </div>
       </li>
     <% end %>
   </ul>
-  <%= foothold_pagy_nav(@pagy) %>
+
+  <% if params[:all].present? %>
+    <%= foothold_pagy_nav(@pagy) %>
+  <% elsif @waiting.to_i.positive? %>
+    <p class="text-xs opacity-60 mt-3 text-center">
+      <%= @waiting %> more <%= "lead".pluralize(@waiting) %> waiting behind these.
+      <%= link_to "Show all", root_path(kind: params[:kind], all: 1), class: "link link-hover" %>
+    </p>
+  <% end %>
 <% end %>

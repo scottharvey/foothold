@@ -1,7 +1,8 @@
 module Foothold
   module Leads
     # One builder per lead kind. `candidates` returns the suggestions the data
-    # supports right now; the base raises them and closes the rest.
+    # supports right now, each with a score; the base drops muted ones,
+    # raises the rest and closes what is no longer reported.
     class Base
       attr_reader :site
 
@@ -9,8 +10,9 @@ module Foothold
         name.demodulize.underscore
       end
 
-      def initialize(site:)
+      def initialize(site:, mutes: nil)
         @site = site
+        @mutes = mutes
       end
 
       def kind
@@ -18,12 +20,26 @@ module Foothold
       end
 
       def call
-        kept = candidates.map { |candidate| Lead.suggest!(site: site, kind: kind, **candidate).id }
+        kept = candidates.reject { |candidate| muted?(candidate) }
+                         .map { |candidate| Lead.suggest!(site: site, kind: kind, **candidate).id }
         Lead.close_missing!(site: site, kind: kind, keep: kept) if Lead::STATE_KINDS.include?(kind)
         kept.size
       end
 
       private
+
+      def mutes
+        @mutes ||= Mute.matcher(site)
+      end
+
+      # A candidate is muted by its term, its page, or any key it names.
+      def muted?(candidate)
+        return false if mutes.empty?
+
+        term = candidate[:term]
+        page = candidate[:page]
+        (term && mutes.phrase?(term.phrase)) || (page && mutes.page?(page.url)) || mutes.muted?(candidate.dig(:payload, :mute_keys))
+      end
 
       def today
         Date.current
@@ -40,6 +56,19 @@ module Foothold
 
       def quoted(phrase)
         "“#{phrase}”"
+      end
+
+      def score
+        Score
+      end
+
+      # The most recent SERP snapshot for a term, as stored by the Serp sweep.
+      def latest_serp(term_id)
+        Reading.from_serp.where(term_id: term_id).where.not(serp_top: []).order(date: :desc).first
+      end
+
+      def volume_of(term)
+        term&.volume
       end
     end
   end

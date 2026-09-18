@@ -1,0 +1,33 @@
+<% content_for :title, "Mutes" %>
+<%= render "foothold/shared/header" %>
+
+<%= render Ui::IndexHeaderComponent.new(title: "Mutes", subtitle: "Terms, pages, rival sections and domains that never become leads") %>
+
+<%= form_with url: mutes_path, method: :post, class: "flex flex-wrap items-end gap-2 mb-4" do |f| %>
+  <fieldset class="fieldset">
+    <label class="label" for="mute_key">Add a mute</label>
+    <%= f.text_field "mute[key]", id: "mute_key", placeholder: "phrase:* in english", class: "input input-sm w-96", required: true, **plain_field %>
+  </fieldset>
+  <%= f.submit "Mute", class: "btn btn-sm" %>
+  <span class="text-xs opacity-60">term:phrase · phrase:glob · page:/path · rival_path:rival.com/section · domain:example.com</span>
+<% end %>
+
+<% if @mutes.empty? %>
+  <%= render Ui::EmptyStateComponent.new(title: "Nothing muted", description: "Mute from a lead's page, or add one above.") %>
+<% else %>
+  <ul class="list rounded-box bg-base-100 shadow-sm">
+    <% @mutes.each do |mute| %>
+      <li class="list-row items-center">
+        <div><%= render Ui::BadgeComponent.new(variant: :neutral, soft: true, size: :sm, text: mute.type.humanize) %></div>
+        <div class="min-w-0 list-col-grow">
+          <div class="font-medium"><%= mute.label.presence || mute.key %></div>
+          <div class="text-xs opacity-60 font-mono"><%= mute.key %> · <%= foothold_ago(mute.created_at) %></div>
+        </div>
+        <div>
+          <%= button_to "Unmute", mute_path(mute), method: :delete, class: "btn btn-ghost btn-xs", form: { class: "inline" } %>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+  <%= foothold_pagy_nav(@pagy) %>
+<% end %>

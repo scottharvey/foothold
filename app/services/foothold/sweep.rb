@@ -22,6 +22,7 @@ module Foothold
       site = Site.current
       @sources.each { |source| run(source, site) }
       run(Leads::Build, site)
+      run(Leads::Outcomes, site) if @kind == :nightly
       run(Sweep::PruneRuns, site)
       self
     end

@@ -20,7 +20,7 @@ module Foothold
       sent_at.present?
     end
 
-    %w[movers_up movers_down new_referrers new_mentions findings top_leads].each do |section|
+    %w[movers_up movers_down new_referrers new_mentions findings top_leads actioned].each do |section|
       define_method(section) { payload.fetch(section, []) }
     end
 
@@ -34,7 +34,8 @@ module Foothold
       referrers = site.referrers.where(first_seen_on: week).not_search_engines
       mentions = site.mentions.where(found_at: week_starting..(week_starting + 7))
       findings = Finding.open.joins(:page).where(foothold_pages: { site_id: site.id }).where(first_seen_at: week_starting..(week_starting + 7))
-      leads = site.leads.open.by_priority
+      leads = site.leads.active.by_score
+      actioned = site.leads.where(state: "done", resolved_by: "operator").where("outcome->>'measured_on' >= ?", week_starting.iso8601)
 
       {
         "movers_up" => movers.select { |mover| mover["delta"] && mover["delta"] < 0 }.first(MOVERS),
@@ -42,8 +43,9 @@ module Foothold
         "new_referrers" => referrers.map { |referrer| { "domain" => referrer.domain, "visits" => referrer.visits, "signups" => referrer.signups } },
         "new_mentions" => mentions.map { |mention| { "url" => mention.url, "title" => mention.title, "source" => mention.source } },
         "findings" => findings.includes(:page).map { |finding| { "summary" => "#{finding.page.url}: #{finding.description}" } },
-        "top_leads" => leads.first(3).map { |lead| { "kind" => lead.kind, "summary" => lead.summary } },
-        "counts" => { "open_leads" => leads.count, "new_referrers" => referrers.count, "new_mentions" => mentions.count }
+        "top_leads" => leads.first(3).map { |lead| { "kind" => lead.kind, "summary" => lead.summary, "score" => lead.score } },
+        "actioned" => actioned.map { |lead| { "summary" => lead.summary, "action" => lead.action, "outcome" => lead.outcome } },
+        "counts" => { "open_leads" => leads.count, "new_referrers" => referrers.count, "new_mentions" => mentions.count, "actioned" => actioned.count }
       }
     end
     private_class_method :new_payload
